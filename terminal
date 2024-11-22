@@ -1,0 +1,104 @@
+mkdir crypto-ico-platform
+cd crypto-ico-platform
+npm init -y
+npm install express mongoose dotenv web3 @binance-chain/bsc-connector ethers cors jsonwebtoken bcryptjs
+npm install --save-dev nodemon concurrently
+npx create-react-app client
+cd client
+npm install react-router-dom @web3-react/core @web3-react/injected-connector ethers
+npm install react-icons
+cd contracts
+npm install @openzeppelin/contracts
+
+# Install all dependencies (run this once)
+npm run install-all
+
+# Start both frontend and backend
+npm run dev
+
+# Open MongoDB shell
+mongosh
+
+# Create and use database
+use ico-platform
+
+# For Windows
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+
+# For Mac/Linux
+lsof -i :5000
+kill -9 <PID>
+
+# In the root directory (365-coin)
+npm run dev
+
+# OR run them separately:
+
+# Terminal 1 (root directory)
+npm run server
+
+# Terminal 2 (root directory)
+npm run client
+
+# Navigate to client directory
+cd client
+
+# Remove node_modules and package-lock.json if they exist
+rm -rf node_modules package-lock.json
+
+# Install dependencies
+npm install react-scripts @web3-react/core @web3-react/injected-connector ethers axios react-router-dom
+
+# Remove the current client directory
+cd ..
+rm -rf client
+
+# Create a new React app
+npx create-react-app client
+
+# Navigate to client directory
+cd client
+
+# Install additional dependencies
+npm install @web3-react/core@6.1.9 @web3-react/injected-connector@6.0.7 ethers@5.7.2 axios react-router-dom
+
+npm start
+
+npm cache clean --force
+
+rm -rf node_modules package-lock.json
+npm install
+
+node -v
+
+# In the client directory
+mkdir public
+
+# Make sure you're in the client directory
+cd client
+
+# Install dependencies if you haven't already
+npm install
+
+# Start the development server
+npm start
+
+# Install ethers@5.7.2
+npm install ethers@5.7.2
+
+# Start the development server
+npm start
+
+# Install three @react-three/fiber @react-three/drei gsap
+npm install three @react-three/fiber @react-three/drei gsap
+
+# Install @react-three/fiber @react-three/drei three gsap
+npm install @react-three/fiber @react-three/drei three gsap
+
+cd client/public
+mkdir textures
+# Download and add globe-texture.png and grid-texture.png to this folder
+
+cd client
+npm install @web3-react/core@6.1.9 @web3-react/injected-connector@6.0.7 @binance-chain/bsc-connector
