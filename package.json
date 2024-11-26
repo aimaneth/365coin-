@@ -1,0 +1,14 @@
+{
+  "name": "365coin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-client": "cd client && npm install",
+    "heroku-postbuild": "npm run install-client && npm run build"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
