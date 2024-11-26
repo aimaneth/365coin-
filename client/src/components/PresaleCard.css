@@ -1,56 +1,281 @@
 .presale-card {
     background: rgba(30, 30, 30, 0.95);
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    max-width: 400px;
-    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
 }
 
 .presale-header {
-    font-size: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.presale-header h2 {
+    font-size: 28px;
     color: var(--text);
-    margin-bottom: 20px;
+    font-weight: 600;
 }
 
-.connect-wallet-btn,
-.contribute-btn {
-    background: var(--primary);
-    color: var(--background);
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 20px;
-}
-
-.connect-wallet-btn:hover,
-.contribute-btn:hover {
-    background: rgba(240, 192, 0, 0.8);
-}
-
-.token-input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 20px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    font-size: 16px;
-}
-
-.error-message,
-.success-message {
-    margin-top: 20px;
+.presale-status {
+    background: rgba(0, 200, 83, 0.1);
+    color: var(--success);
+    padding: 8px 16px;
+    border-radius: 100px;
     font-size: 14px;
-    color: var(--accent);
+    font-weight: 500;
+    border: 1px solid rgba(0, 200, 83, 0.2);
 }
 
-.success-message {
+.progress-section {
+    margin-bottom: 32px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.presale-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-icon {
+    font-size: 24px;
     color: var(--primary);
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 20px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.payment-methods {
+    margin-bottom: 32px;
+}
+
+.payment-methods h3 {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.method-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.method-btn {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.method-btn svg {
+    font-size: 16px;
+}
+
+.method-btn.active {
+    background: var(--primary-gradient);
+    border-color: var(--primary);
+    color: var(--background);
+}
+
+.payment-details {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.detail-row:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row .value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.wallet-address {
+    margin-bottom: 32px;
+}
+
+.wallet-address h3 {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.address-display {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.address {
+    font-family: monospace;
+    color: var(--text);
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.copy-btn {
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-btn.copied {
+    background: var(--success);
+    color: var(--background);
+}
+
+.contribution-input {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.contribution-input input {
+    width: 100%;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.contribution-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.buy-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 12px;
+    color: var(--background);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(240, 192, 0, 0.2);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .presale-card {
+        padding: 24px;
+    }
+
+    .method-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .presale-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-item {
+        padding: 16px;
+    }
+
+    .contribution-input input,
+    .buy-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
 } 

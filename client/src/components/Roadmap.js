@@ -1,23 +1,71 @@
 import React from 'react';
-import { FaRocket, FaCode, FaBullhorn, FaGlobe, FaTimes, FaClock } from 'react-icons/fa';
+import { FaRocket, FaCode, FaBullhorn, FaGlobe } from 'react-icons/fa';
+import './Roadmap.css';
 
 const Roadmap = () => {
     const milestones = [
-        { phase: "Phase 1", title: "Development", items: ["Website launch", "365COIN Token sale"], icon: <FaCode />, active: true },
-        { phase: "Phase 2", title: "Launch", items: ["One-way 365COIN launch", "[Binance, Bybit, Crypto.com]"], icon: <FaRocket />, active: false },
-        { phase: "Phase 3", title: "Expansion", items: ["Bring 365COIN worldwide","International partnerships", "Global marketing", "Achieve Top 10 Cryptocurrencies within 3 years"], icon: <FaGlobe />, active: false },
-        { phase: "Phase 4", title: "Freedom", items: ["Our plan is to achieve tiered freedom to all stakeholders"], icon: <FaClock />, active: false }
+        {
+            phase: "Phase 1",
+            title: "Development",
+            items: [
+                "Website launch",
+                "Smart contract development",
+                "365COIN Token creation",
+                "Security audit completion"
+            ],
+            icon: <FaCode />,
+            active: true
+        },
+        {
+            phase: "Phase 2",
+            title: "Launch",
+            items: [
+                "Token presale",
+                "DEX listing",
+                "Marketing campaign initiation",
+                "Community building"
+            ],
+            icon: <FaRocket />,
+            active: false
+        },
+        {
+            phase: "Phase 3",
+            title: "Expansion",
+            items: [
+                "CEX listings [Binance, Bybit, Crypto.com]",
+                "Partnership development",
+                "Global marketing expansion",
+                "Ecosystem growth"
+            ],
+            icon: <FaBullhorn />,
+            active: false
+        },
+        {
+            phase: "Phase 4",
+            title: "Global Adoption",
+            items: [
+                "Major exchange listings",
+                "International partnerships",
+                "Advanced features rollout",
+                "Achieve Top 10 Cryptocurrencies"
+            ],
+            icon: <FaGlobe />,
+            active: false
+        }
     ];
 
     return (
         <section className="roadmap-section">
-            <h2>Roadmap</h2>
+            <h2 className="roadmap-title">Roadmap</h2>
             <div className="roadmap-timeline">
                 {milestones.map((milestone, index) => (
-                    <div key={index} className={`timeline-item ${milestone.active ? 'active' : ''}`} style={{ '--i': index }}>
+                    <div 
+                        key={index} 
+                        className={`timeline-item ${milestone.active ? 'active' : ''}`}
+                        style={{ '--i': index }}
+                    >
                         <div className="timeline-marker">
                             <div className="marker-icon">{milestone.icon}</div>
-                            {index < milestones.length - 1 && <div className="timeline-connector" />}
                         </div>
                         <div className="timeline-content">
                             <div className="timeline-phase">{milestone.phase}</div>

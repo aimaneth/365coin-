@@ -1,0 +1,273 @@
+.roadmap-section {
+    padding: 120px 20px;
+    background: linear-gradient(180deg, #131313 0%, #1E1E1E 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.roadmap-title {
+    text-align: center;
+    font-size: 48px;
+    margin-bottom: 100px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    z-index: 2;
+}
+
+/* Glowing background effect */
+.roadmap-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    background: var(--primary);
+    filter: blur(200px);
+    opacity: 0.05;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.roadmap-timeline {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    padding: 40px 0;
+}
+
+/* Animated center line */
+.roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, 
+        rgba(240, 192, 0, 0) 0%,
+        rgba(240, 192, 0, 0.5) 15%,
+        rgba(240, 192, 0, 0.5) 85%,
+        rgba(240, 192, 0, 0) 100%
+    );
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 50%;
+    position: relative;
+    margin-bottom: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.timeline-item:nth-child(even) {
+    justify-content: flex-start;
+    padding-right: 0;
+    padding-left: 50%;
+}
+
+/* Futuristic marker */
+.timeline-marker {
+    position: absolute;
+    right: -35px;
+    top: 0;
+    width: 70px;
+    height: 70px;
+    background: rgba(30, 30, 30, 0.95);
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(240, 192, 0, 0.2);
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.timeline-item:nth-child(even) .timeline-marker {
+    right: auto;
+    left: -35px;
+}
+
+.marker-icon {
+    color: var(--primary);
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+/* Hover effects */
+.timeline-marker:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+    border-color: transparent;
+    box-shadow: 0 0 30px rgba(240, 192, 0, 0.4);
+}
+
+.timeline-marker:hover .marker-icon {
+    color: var(--background);
+    transform: rotateY(180deg);
+}
+
+/* Content card */
+.timeline-content {
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    width: calc(100% - 100px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Glowing border effect */
+.timeline-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%,
+        var(--primary) 50%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.timeline-content:hover::before {
+    opacity: 1;
+}
+
+.timeline-content:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(240, 192, 0, 0.2);
+}
+
+.timeline-phase {
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(240, 192, 0, 0.1);
+    border-radius: 20px;
+}
+
+.timeline-content h3 {
+    color: var(--text);
+    font-size: 28px;
+    margin-bottom: 25px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.timeline-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.timeline-content li {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    padding-left: 30px;
+    position: relative;
+    line-height: 1.6;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.timeline-content li::before {
+    content: '→';
+    color: var(--primary);
+    position: absolute;
+    left: 0;
+    font-size: 18px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.timeline-content li:hover {
+    color: var(--text);
+    transform: translateX(5px);
+}
+
+.timeline-content li:hover::before {
+    opacity: 1;
+    transform: translateX(5px);
+}
+
+/* Active state with pulsing effect */
+.timeline-item.active .timeline-marker {
+    animation: pulseMarker 2s infinite;
+}
+
+@keyframes pulseMarker {
+    0% {
+        box-shadow: 0 0 0 0 rgba(240, 192, 0, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(240, 192, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(240, 192, 0, 0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .roadmap-timeline::before {
+        left: 30px;
+    }
+
+    .timeline-item,
+    .timeline-item:nth-child(even) {
+        padding: 0 0 0 80px;
+        justify-content: flex-start;
+    }
+
+    .timeline-marker,
+    .timeline-item:nth-child(even) .timeline-marker {
+        left: -5px;
+        right: auto;
+        width: 60px;
+        height: 60px;
+    }
+
+    .timeline-content {
+        width: 100%;
+        padding: 30px;
+    }
+
+    .roadmap-title {
+        font-size: 36px;
+        margin-bottom: 60px;
+    }
+} 
