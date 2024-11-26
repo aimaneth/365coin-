@@ -15,7 +15,9 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const API_URL = process.env.NODE_ENV === 'production' 
+        ? '/api'
+        : process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
     const login = async (email, password) => {
         try {
@@ -42,27 +44,19 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (email, password, username) => {
         try {
-            console.log('Attempting signup with:', { email, username }); // Debug log
+            console.log('Attempting signup with:', { email, username });
 
             const response = await fetch(`${API_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ email, password, username })
             });
-            
-            // Log response status and headers for debugging
-            console.log('Response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
 
-            // First check if the response is ok
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({
-                    message: 'Failed to parse error response'
-                }));
-                throw new Error(errorData.message || 'Signup failed');
+                const error = await response.json();
+                throw new Error(error.message || 'Signup failed');
             }
 
             const data = await response.json();
@@ -71,8 +65,8 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('user', JSON.stringify(data.user));
             return data;
         } catch (error) {
-            console.error('Signup error details:', error);
-            throw new Error(error.message || 'Failed to create account');
+            console.error('Signup error:', error);
+            throw error;
         }
     };
 

@@ -5,18 +5,29 @@
   "type": "module",
   "scripts": {
     "start": "node api/server.js",
-    "dev": "cd client && npm start",
-    "build": "cd client && npm run build",
+    "server": "nodemon api/server.js",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "cd client && npm install && npm run build",
+    "vercel-build": "npm run build",
     "deploy": "vercel --prod"
   },
   "dependencies": {
+    "@binance-chain/bsc-connector": "^1.0.0",
     "bcryptjs": "^2.4.3",
+    "chart.js": "^4.4.6",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.0.0"
+    "lightweight-charts": "^4.2.1",
+    "mongoose": "^7.0.0",
+    "react-chartjs-2": "^5.2.0",
+    "web-vitals": "^4.2.4"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.7",
     "vercel": "^32.0.0"
   }
 }

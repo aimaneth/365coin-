@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 let cached = global.mongoose;
 
@@ -16,9 +20,18 @@ export async function connectDB() {
             bufferCommands: false,
         };
 
+        if (!process.env.MONGODB_URI) {
+            throw new Error('MONGODB_URI is not defined in environment variables');
+        }
+
         cached.promise = mongoose.connect(process.env.MONGODB_URI, opts)
             .then((mongoose) => {
+                console.log('MongoDB Connected');
                 return mongoose;
+            })
+            .catch((error) => {
+                console.error('MongoDB Connection Error:', error);
+                throw error;
             });
     }
 

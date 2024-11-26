@@ -1,34 +1,14 @@
-import { connectDB } from '../../utils/db';
-import User from '../../models/User';
+import { connectDB } from '../../utils/db.js';
+import User from '../../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-export const config = {
-    api: {
-        bodyParser: true
-    }
-};
-
-export default async function handler(req, res) {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method not allowed' });
-    }
-
+export const signup = async (req, res) => {
     try {
         await connectDB();
-
+        
         const { email, password, username } = req.body;
+        console.log('Signup attempt:', { email, username });
 
         // Check if user exists
         const existingUser = await User.findOne({ 
@@ -71,4 +51,4 @@ export default async function handler(req, res) {
         console.error('Signup Error:', error);
         res.status(500).json({ message: 'Server error during signup' });
     }
-} 
+}; 

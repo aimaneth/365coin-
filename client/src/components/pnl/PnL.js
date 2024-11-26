@@ -10,6 +10,8 @@ const PnL = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTrader, setSelectedTrader] = useState(null);
     const graphContainerRef = useRef(null);
+    const [startDate, setStartDate] = useState('2024-03-01');
+    const [endDate, setEndDate] = useState('2024-03-20');
 
     // Generate dummy candlestick data
     const generateCandlestickData = (days) => {
@@ -481,13 +483,15 @@ const PnL = () => {
                                     <input 
                                         type="date" 
                                         className="date-picker-input"
-                                        value="2024-03-01"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
                                     />
                                     <span className="date-separator">to</span>
                                     <input 
                                         type="date" 
                                         className="date-picker-input"
-                                        value="2024-03-20"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
                                     />
                                 </div>
                                 <button className="download-btn">

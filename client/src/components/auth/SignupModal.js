@@ -31,7 +31,7 @@ const SignupModal = ({ onClose, onSwitchToLogin }) => {
             await signup(formData.email, formData.password, formData.username);
             onClose();
         } catch (err) {
-            setError('Failed to create an account. ' + err.message);
+            setError(err.message || 'Failed to create account');
         } finally {
             setLoading(false);
         }
