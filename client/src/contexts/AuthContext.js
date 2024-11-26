@@ -214,6 +214,48 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Add this method to verify token on app load
+    const verifyToken = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return null;
+
+            const response = await fetch(`${API_URL}/auth/verify-token`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                return null;
+            }
+
+            const data = await response.json();
+            return data.user;
+        } catch (error) {
+            console.error('Token verification error:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            return null;
+        }
+    };
+
+    // Add to useEffect in AuthProvider
+    useEffect(() => {
+        const initAuth = async () => {
+            setLoading(true);
+            const verifiedUser = await verifyToken();
+            if (verifiedUser) {
+                setUser(verifiedUser);
+            }
+            setLoading(false);
+        };
+
+        initAuth();
+    }, []);
+
     return (
         <AuthContext.Provider value={{ 
             user, 

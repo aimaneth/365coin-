@@ -1,6 +1,6 @@
 {
   "short_name": "365 Coin",
-  "name": "365 Coin ICO Platform",
+  "name": "365 Coin Trading Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -22,4 +22,4 @@
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#ffffff"
-} 
+}
