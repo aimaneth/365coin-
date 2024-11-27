@@ -44,28 +44,24 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (email, password, username) => {
         try {
-            console.log('Attempting signup with:', { email, username });
-
-            const response = await fetch(`${API_URL}/auth/signup`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, username })
             });
-
+            
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Signup failed');
+                throw new Error(error.message);
             }
-
+            
             const data = await response.json();
-            setUser(data.user);
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            setUser(data.user);
             return data;
         } catch (error) {
-            console.error('Signup error:', error);
+            console.error('Signup Error:', error);
             throw error;
         }
     };
