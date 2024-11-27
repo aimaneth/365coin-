@@ -1,12 +1,10 @@
 import express from 'express';
-import { signup } from './signup.js';
-import { login } from './login.js';
-import { verifyToken } from '../middleware/auth.js';
+import handler from './index.js';
 
 const router = express.Router();
 
-router.post('/signup', signup);
-router.post('/login', login);
-router.get('/verify-token', verifyToken);
+router.post('/signup', (req, res) => handler(req, { ...res, query: { path: 'signup' } }));
+router.post('/login', (req, res) => handler(req, { ...res, query: { path: 'login' } }));
+router.post('/reset-password', (req, res) => handler(req, { ...res, query: { path: 'reset-password' } }));
 
 export default router; 

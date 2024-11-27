@@ -1,6 +1,6 @@
 # 365Coin Platform
 
-A decentralized ICO platform built with React, Node.js, and Solidity.
+A decentralized ICO platform built with React, Node.js, and MongoDB.
 
 ## Development
 
