@@ -4,8 +4,8 @@
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/.netlify/functions/auth"
-  to = "/.netlify/functions/auth"
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
   status = 200
   force = true
 
