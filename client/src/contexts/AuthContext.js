@@ -15,42 +15,11 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const API_URL = process.env.NODE_ENV === 'production' 
-        ? '/api'
-        : process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-    const login = async (email, password) => {
-        try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message);
-            }
-            
-            const data = await response.json();
-            setUser(data.user);
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            return data;
-        } catch (error) {
-            throw error;
-        }
-    };
-
     const signup = async (email, password, username) => {
         try {
             console.log('Attempting signup with:', { email, username });
             
-            // Use the correct API URL
-            const API_URL = process.env.REACT_APP_API_URL;
-            console.log('Using API URL:', API_URL); // Debug log
-            
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -60,7 +29,7 @@ export const AuthProvider = ({ children }) => {
             });
             
             const data = await response.json();
-            console.log('Response:', data); // Debug log
+            console.log('Response:', data);
             
             if (!response.ok) {
                 throw new Error(data.message || 'Signup failed');
@@ -72,6 +41,33 @@ export const AuthProvider = ({ children }) => {
             return data;
         } catch (error) {
             console.error('Signup Error:', error);
+            throw error;
+        }
+    };
+
+    const login = async (email, password) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            setUser(data.user);
+            return data;
+        } catch (error) {
+            console.error('Login Error:', error);
             throw error;
         }
     };
@@ -103,7 +99,7 @@ export const AuthProvider = ({ children }) => {
 
     const resetPassword = async (email) => {
         try {
-            const response = await fetch(`${API_URL}/auth/reset-password`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -128,7 +124,7 @@ export const AuthProvider = ({ children }) => {
 
             console.log('Connecting wallet:', walletAddress);
 
-            const response = await fetch(`${API_URL}/auth/connect-wallet`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/connect-wallet`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -175,7 +171,7 @@ export const AuthProvider = ({ children }) => {
 
             console.log('Disconnecting wallet:', walletAddress);
 
-            const response = await fetch(`${API_URL}/auth/disconnect-wallet`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/disconnect-wallet`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -220,7 +216,7 @@ export const AuthProvider = ({ children }) => {
             const token = localStorage.getItem('token');
             if (!token) return null;
 
-            const response = await fetch(`${API_URL}/auth/verify-token`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-token`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

@@ -2,40 +2,44 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Add CORS headers
 const headers = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-let cachedDb = null;
+let cachedConnection = null;
 
 const connectDB = async () => {
-  if (cachedDb) {
-    return cachedDb;
+  if (cachedConnection) {
+    console.log('Using cached database connection');
+    return cachedConnection;
   }
 
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI, {
+    console.log('Creating new database connection');
+    console.log('MongoDB URI:', process.env.MONGODB_URI ? 'exists' : 'missing');
+
+    const connection = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 10000,
+      bufferCommands: false
     });
-    
-    cachedDb = db;
-    return db;
+
+    console.log('MongoDB Connected Successfully');
+    cachedConnection = connection;
+    return connection;
   } catch (err) {
-    console.error('MongoDB connection error:', err);
-    throw err;
+    console.error('MongoDB Connection Error:', err);
+    throw new Error(`Database connection failed: ${err.message}`);
   }
 };
 
 const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String
+  username: { type: String, required: true },
+  email: { type: String, required: true },
+  password: { type: String, required: true }
 });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
@@ -43,35 +47,43 @@ const User = mongoose.models.User || mongoose.model('User', userSchema);
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  console.log('Function invoked with event:', { 
-    method: event.httpMethod,
-    path: event.path,
-    body: event.body 
-  });
-
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-  
   try {
-    console.log('Connecting to MongoDB...');
+    console.log('Function started');
+    console.log('Event:', {
+      method: event.httpMethod,
+      path: event.path,
+      headers: event.headers
+    });
+
+    if (event.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers,
+        body: ''
+      };
+    }
+
     await connectDB();
-    console.log('MongoDB connected successfully');
 
     if (event.httpMethod === 'POST') {
       const { email, password, username } = JSON.parse(event.body);
-      console.log('Received signup request for:', { email, username });
+      console.log('Processing signup for:', { email, username });
+
+      if (!email || !password || !username) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            message: 'All fields are required' 
+          })
+        };
+      }
 
       const existingUser = await User.findOne({ 
         $or: [{ email }, { username }] 
       });
 
       if (existingUser) {
-        console.log('User already exists:', { email, username });
         return {
           statusCode: 400,
           headers,
@@ -90,7 +102,6 @@ exports.handler = async (event, context) => {
         password: hashedPassword 
       });
       
-      console.log('Saving new user...');
       await user.save();
       console.log('User saved successfully');
 
@@ -119,15 +130,20 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({ message: 'Method not allowed' })
     };
+
   } catch (error) {
-    console.error('Function error:', error);
+    console.error('Function error:', {
+      message: error.message,
+      stack: error.stack
+    });
+
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        message: 'Server error', 
+        message: 'Server error',
         error: error.message,
-        stack: error.stack 
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       })
     };
   }

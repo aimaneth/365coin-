@@ -13,6 +13,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.0",
+    "mongodb": "^6.11.0",
     "mongoose": "^6.12.0"
   },
   "devDependencies": {
