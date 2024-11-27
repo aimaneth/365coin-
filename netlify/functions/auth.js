@@ -41,10 +41,14 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 exports.handler = async (event, context) => {
-  // Important for MongoDB connections
   context.callbackWaitsForEmptyEventLoop = false;
 
-  // Handle OPTIONS request for CORS
+  console.log('Function invoked with event:', { 
+    method: event.httpMethod,
+    path: event.path,
+    body: event.body 
+  });
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -54,16 +58,20 @@ exports.handler = async (event, context) => {
   }
   
   try {
+    console.log('Connecting to MongoDB...');
     await connectDB();
+    console.log('MongoDB connected successfully');
 
     if (event.httpMethod === 'POST') {
       const { email, password, username } = JSON.parse(event.body);
+      console.log('Received signup request for:', { email, username });
 
       const existingUser = await User.findOne({ 
         $or: [{ email }, { username }] 
       });
 
       if (existingUser) {
+        console.log('User already exists:', { email, username });
         return {
           statusCode: 400,
           headers,
@@ -82,7 +90,9 @@ exports.handler = async (event, context) => {
         password: hashedPassword 
       });
       
+      console.log('Saving new user...');
       await user.save();
+      console.log('User saved successfully');
 
       const token = jwt.sign(
         { userId: user._id },
@@ -114,7 +124,11 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ message: 'Server error', error: error.message })
+      body: JSON.stringify({ 
+        message: 'Server error', 
+        error: error.message,
+        stack: error.stack 
+      })
     };
   }
 }; 
