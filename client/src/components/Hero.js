@@ -14,7 +14,7 @@ const Hero = () => {
                             <span className="gradient-text">365coin</span>
                             <br />Make Better Life With Trusted CryptoCoin
                         </h1>
-                        <p>Experience the power of AI-driven trading with advanced analytics and real-time market insights. Join thousands of successful traders today.</p>
+                        <p>Use modern progressive technologies of Bitcoin to earn money. Join thousands of successful traders today.</p>
                     </div>
                     
                     <div className="hero-cta">
