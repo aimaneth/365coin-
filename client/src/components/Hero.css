@@ -223,8 +223,9 @@
     }
 
     .hero-container {
-        flex-direction: column;
+        flex-direction: column-reverse;
         gap: 60px;
+        padding-top: 40px;
     }
 
     .hero-content {
@@ -245,12 +246,17 @@
 
     .presale-wrapper {
         width: 100%;
+        margin-top: 40px;
     }
 }
 
 @media (max-width: 768px) {
+    .hero-section {
+        padding: 100px 0 60px;
+    }
+
     .hero-container {
-        padding: 0 20px;
+        padding: 20px 20px 0;
     }
 
     .hero-text h1 {
@@ -259,10 +265,6 @@
 
     .hero-text p {
         font-size: 18px;
-    }
-
-    .hero-cta {
-        flex-direction: column;
     }
 
     .hero-stats {
@@ -278,6 +280,10 @@
 
     .feature-item {
         padding: 20px;
+    }
+
+    .presale-wrapper {
+        margin-top: 8px;
     }
 }
 

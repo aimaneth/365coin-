@@ -18,11 +18,8 @@ const Hero = () => {
                     </div>
                     
                     <div className="hero-cta">
-                        <Link to="/packages" className="primary-btn">
-                            Start Trading Now <FaArrowRight />
-                        </Link>
-                        <Link to="/pnl" className="secondary-btn">
-                            View Live PnL
+                        <Link to="/pnl" className="primary-btn">
+                            View Live PnL <FaArrowRight />
                         </Link>
                     </div>
 

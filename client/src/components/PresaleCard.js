@@ -22,8 +22,8 @@ const PresaleCard = () => {
             usdt: "50"
         },
         maxContribution: {
-            bnb: "5",
-            usdt: "2500"
+            bnb: "No Limit",
+            usdt: "No Limit"
         },
         walletAddresses: {
             bnb: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
@@ -135,7 +135,7 @@ const PresaleCard = () => {
                 <div className="detail-row">
                     <span>Max Contribution</span>
                     <span className="value">
-                        {getPaymentIcon(paymentMethod)} {paymentMethod === 'bnb' ? presaleData.maxContribution.bnb + ' BNB' : presaleData.maxContribution.usdt + ' USDT'}
+                        {getPaymentIcon(paymentMethod)} {paymentMethod === 'bnb' ? presaleData.maxContribution.bnb + ' ' : presaleData.maxContribution.usdt + ' USDT'}
                     </span>
                 </div>
             </div>

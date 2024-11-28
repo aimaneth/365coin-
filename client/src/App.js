@@ -18,7 +18,6 @@ import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 import debounce from 'lodash/debounce';
-import Packages from './components/packages/Packages';
 import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
 import Disclaimer from './components/legal/Disclaimer';
@@ -65,7 +64,6 @@ const AppContent = () => {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/pnl" element={<PnL />} />
-                    <Route path="/packages" element={<Packages />} />
                     <Route 
                         path="/profile" 
                         element={user ? <Profile /> : <Navigate to="/" replace />} 

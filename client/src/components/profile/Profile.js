@@ -218,6 +218,11 @@ const Profile = () => {
             </div>
 
             <div className="profile-grid">
+                {/* Brand Section */}
+                <div className="footer-brand">
+                    {/* ... existing brand content */}
+                </div>
+
                 {/* Wallets Management Card */}
                 <div className="profile-card wallets-card">
                     <h3>Your Wallets</h3>
@@ -380,64 +385,6 @@ const Profile = () => {
                         </div>
                     </>
                 )}
-
-                {/* Package Management Card */}
-                <div className="profile-card package-card">
-                    <div className="settings-card-header">
-                        <h2>Current Package</h2>
-                    </div>
-                    
-                    {user?.package ? (
-                        <div className="current-package">
-                            <div className="package-header">
-                                <div className="package-icon-wrapper">
-                                    {user.package.name === 'Starter' && <FaRocket className="package-icon" />}
-                                    {user.package.name === 'Professional' && <FaCrown className="package-icon" />}
-                                    {user.package.name === 'Enterprise' && <FaGem className="package-icon" />}
-                                </div>
-                                <div className="package-info">
-                                    <h3>{user.package.name}</h3>
-                                    <span className="package-price">${user.package.price}/month</span>
-                                </div>
-                                <div className="package-status">
-                                    <span className="status-badge active">Active</span>
-                                    <span className="expiry-date">
-                                        Expires: {new Date(user.package.expiryDate).toLocaleDateString()}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div className="package-features">
-                                {user.package.features.map((feature, index) => (
-                                    <div key={index} className="feature-item">
-                                        <FaCheck className="feature-icon" />
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            
-                            <div className="package-actions">
-                                <Link to="/packages" className="upgrade-btn">
-                                    <FaArrowUp /> Upgrade Package
-                                </Link>
-                                <button className="renew-btn">
-                                    <FaSync /> Renew Package
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="no-package">
-                            <div className="no-package-content">
-                                <FaGem className="no-package-icon" />
-                                <h3>No Active Package</h3>
-                                <p>Upgrade your trading experience with our premium packages</p>
-                                <Link to="/packages" className="buy-package-btn">
-                                    <FaShoppingCart /> View Packages
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );
