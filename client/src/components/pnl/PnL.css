@@ -589,3 +589,119 @@
 .react-datepicker-popper {
     z-index: 100 !important;
 }
+
+/* MUI DatePicker Dark Theme Styles */
+.MuiDateCalendar-root {
+    background-color: rgba(30, 30, 30, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text) !important;
+}
+
+.MuiPickersDay-root {
+    color: var(--text) !important;
+}
+
+.MuiPickersDay-today {
+    border-color: var(--primary) !important;
+}
+
+.MuiPickersDay-root.Mui-selected {
+    background-color: var(--primary) !important;
+    color: var(--background) !important;
+}
+
+.MuiPickersDay-root:hover {
+    background-color: rgba(240, 192, 0, 0.1) !important;
+}
+
+.MuiDateCalendar-viewTransitionContainer {
+    color: var(--text) !important;
+}
+
+.MuiPickersCalendarHeader-root {
+    color: var(--text) !important;
+}
+
+.MuiPickersArrowSwitcher-button {
+    color: var(--text) !important;
+}
+
+.MuiPickersCalendarHeader-label {
+    color: var(--text) !important;
+}
+
+.MuiInputBase-root {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 8px !important;
+    color: var(--text) !important;
+}
+
+.MuiInputBase-root .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: var(--primary) !important;
+}
+
+.MuiPickersPopper-root {
+    & .MuiPaper-root {
+        background-color: rgba(30, 30, 30, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+}
+
+.MuiDayCalendar-weekDayLabel {
+    color: var(--text-secondary) !important;
+}
+
+.MuiPickersYear-yearButton {
+    color: var(--text) !important;
+}
+
+.MuiPickersYear-yearButton.Mui-selected {
+    background-color: var(--primary) !important;
+    color: var(--background) !important;
+}
+
+.MuiPickersYear-yearButton:hover {
+    background-color: rgba(240, 192, 0, 0.1) !important;
+}
+
+.MuiPickersMonth-root {
+    color: var(--text) !important;
+}
+
+.MuiPickersMonth-root.Mui-selected {
+    background-color: var(--primary) !important;
+    color: var(--background) !important;
+}
+
+.MuiPickersMonth-root:hover {
+    background-color: rgba(240, 192, 0, 0.1) !important;
+}
+
+/* Adjust input field size */
+.date-picker {
+    width: 150px !important;
+}
+
+.date-picker .MuiInputBase-input {
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+}
+
+/* Date picker group spacing */
+.date-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-picker-group span {
+    color: var(--text-secondary);
+}

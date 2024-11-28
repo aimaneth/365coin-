@@ -4,6 +4,24 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#f0c000',
+        },
+        background: {
+            paper: 'rgba(30, 30, 30, 0.95)',
+            default: 'rgba(30, 30, 30, 0.95)',
+        },
+        text: {
+            primary: '#ffffff',
+            secondary: 'rgba(255, 255, 255, 0.7)',
+        },
+    },
+});
 
 const TradeHistory = ({ trades }) => {
     const [startDate, setStartDate] = useState(dayjs().subtract(7, 'day'));
@@ -40,34 +58,36 @@ const TradeHistory = ({ trades }) => {
             <div className="trade-history-header">
                 <h3>Trade History</h3>
                 <div className="trade-history-controls">
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <div className="date-picker-group">
-                            <DatePicker
-                                value={startDate}
-                                onChange={setStartDate}
-                                format="MMM D, YYYY"
-                                slotProps={{
-                                    textField: {
-                                        size: "small",
-                                        className: "date-picker"
-                                    }
-                                }}
-                            />
-                            <span>to</span>
-                            <DatePicker
-                                value={endDate}
-                                onChange={setEndDate}
-                                minDate={startDate}
-                                format="MMM D, YYYY"
-                                slotProps={{
-                                    textField: {
-                                        size: "small",
-                                        className: "date-picker"
-                                    }
-                                }}
-                            />
-                        </div>
-                    </LocalizationProvider>
+                    <ThemeProvider theme={darkTheme}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <div className="date-picker-group">
+                                <DatePicker
+                                    value={startDate}
+                                    onChange={setStartDate}
+                                    format="MMM D, YYYY"
+                                    slotProps={{
+                                        textField: {
+                                            size: "small",
+                                            className: "date-picker"
+                                        }
+                                    }}
+                                />
+                                <span>to</span>
+                                <DatePicker
+                                    value={endDate}
+                                    onChange={setEndDate}
+                                    minDate={startDate}
+                                    format="MMM D, YYYY"
+                                    slotProps={{
+                                        textField: {
+                                            size: "small",
+                                            className: "date-picker"
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </LocalizationProvider>
+                    </ThemeProvider>
                     <button className="download-btn" onClick={downloadCSV}>
                         <FaDownload /> Export CSV
                     </button>
