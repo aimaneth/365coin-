@@ -19,6 +19,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 import debounce from 'lodash/debounce';
 import Packages from './components/packages/Packages';
+import Terms from './components/legal/Terms';
+import Privacy from './components/legal/Privacy';
+import Disclaimer from './components/legal/Disclaimer';
+import Cookies from './components/legal/Cookies';
 
 // Initialize Web3
 const getLibrary = (provider) => {
@@ -70,6 +74,10 @@ const AppContent = () => {
                         path="/settings" 
                         element={user ? <Settings /> : <Navigate to="/" replace />} 
                     />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/disclaimer" element={<Disclaimer />} />
+                    <Route path="/cookies" element={<Cookies />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </div>

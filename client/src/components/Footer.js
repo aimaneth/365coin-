@@ -73,9 +73,9 @@ const Footer = () => {
                         © {new Date().getFullYear()} 365 Coin. All rights reserved.
                     </p>
                     <div className="footer-bottom-links">
-                        <a href="/terms" className="footer-bottom-link">Terms</a>
-                        <a href="/privacy" className="footer-bottom-link">Privacy</a>
-                        <a href="/cookies" className="footer-bottom-link">Cookies</a>
+                        <Link to="/terms" className="footer-bottom-link">Terms</Link>
+                        <Link to="/privacy" className="footer-bottom-link">Privacy</Link>
+                        <Link to="/cookies" className="footer-bottom-link">Cookies</Link>
                     </div>
                 </div>
             </div>
