@@ -33,6 +33,30 @@ const PnL = () => {
                     trades: 45,
                     winRate: 78,
                     totalValue: 1250000
+                },
+                '7d': {
+                    pnl: 450000,
+                    pnlPercentage: 45.0,
+                    volume: 8500000,
+                    trades: 156,
+                    winRate: 82,
+                    totalValue: 1450000
+                },
+                '30d': {
+                    pnl: 1250000,
+                    pnlPercentage: 125.0,
+                    volume: 25000000,
+                    trades: 589,
+                    winRate: 75,
+                    totalValue: 2250000
+                },
+                'ALL': {
+                    pnl: 5250000,
+                    pnlPercentage: 525.0,
+                    volume: 105000000,
+                    trades: 2456,
+                    winRate: 80,
+                    totalValue: 6250000
                 }
             }
         },
@@ -49,6 +73,30 @@ const PnL = () => {
                     trades: 32,
                     winRate: 72,
                     totalValue: 950000
+                },
+                '7d': {
+                    pnl: 320000,
+                    pnlPercentage: 32.0,
+                    volume: 6500000,
+                    trades: 123,
+                    winRate: 75,
+                    totalValue: 1150000
+                },
+                '30d': {
+                    pnl: 950000,
+                    pnlPercentage: 95.0,
+                    volume: 19000000,
+                    trades: 432,
+                    winRate: 70,
+                    totalValue: 1850000
+                },
+                'ALL': {
+                    pnl: 3850000,
+                    pnlPercentage: 385.0,
+                    volume: 85000000,
+                    trades: 1876,
+                    winRate: 73,
+                    totalValue: 4850000
                 }
             }
         }
@@ -210,25 +258,25 @@ const PnL = () => {
                                         </span>
                                     </div>
                                     <div className="td pnl">
-                                        <span className={`pnl-value ${trader.stats[timeframe].pnl >= 0 ? 'positive' : 'negative'}`}>
-                                            {trader.stats[timeframe].pnl >= 0 ? '+' : '-'}
-                                            ${Math.abs(trader.stats[timeframe].pnl).toLocaleString()}
+                                        <span className={`pnl-value ${(trader.stats[timeframe]?.pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                                            {(trader.stats[timeframe]?.pnl || 0) >= 0 ? '+' : '-'}
+                                            ${Math.abs(trader.stats[timeframe]?.pnl || 0).toLocaleString()}
                                         </span>
                                         <span className="pnl-percentage">
-                                            {trader.stats[timeframe].pnlPercentage}%
+                                            {trader.stats[timeframe]?.pnlPercentage || 0}%
                                         </span>
                                     </div>
                                     <div className="td volume">
-                                        ${trader.stats[timeframe].volume.toLocaleString()}
+                                        ${(trader.stats[timeframe]?.volume || 0).toLocaleString()}
                                     </div>
                                     <div className="td win-rate">
                                         <div className="win-rate-bar">
                                             <div 
                                                 className="win-rate-fill"
-                                                style={{ width: `${trader.stats[timeframe].winRate}%` }}
+                                                style={{ width: `${trader.stats[timeframe]?.winRate || 0}%` }}
                                             />
                                         </div>
-                                        <span>{trader.stats[timeframe].winRate}%</span>
+                                        <span>{trader.stats[timeframe]?.winRate || 0}%</span>
                                     </div>
                                 </div>
                             ))}

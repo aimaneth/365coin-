@@ -110,8 +110,10 @@ const TradeHistory = ({ trades }) => {
                             <div className="td" data-label="Date">
                                 {dayjs(trade.time * 1000).format('MMM D, YYYY')}
                             </div>
-                            <div className={`td type ${trade.type}`} data-label="Type">
-                                {trade.type.toUpperCase()}
+                            <div className="td" data-label="Type">
+                                <span className={`type ${trade.type}`}>
+                                    {trade.type.toUpperCase()}
+                                </span>
                             </div>
                             <div className="td" data-label="Entry">
                                 ${trade.entryPrice.toLocaleString()}
@@ -122,10 +124,10 @@ const TradeHistory = ({ trades }) => {
                             <div className="td" data-label="Amount">
                                 {trade.amount}
                             </div>
-                            <div className={`td pnl ${trade.pnl >= 0 ? 'positive' : 'negative'}`} data-label="PnL">
+                            <div className={`td ${trade.pnl >= 0 ? 'positive' : 'negative'}`} data-label="PnL">
                                 {trade.pnl >= 0 ? '+' : '-'}${Math.abs(trade.pnl).toLocaleString()}
                             </div>
-                            <div className={`td roi ${trade.roi >= 0 ? 'positive' : 'negative'}`} data-label="ROI">
+                            <div className={`td ${trade.roi >= 0 ? 'positive' : 'negative'}`} data-label="ROI">
                                 {trade.roi >= 0 ? '+' : ''}{trade.roi}%
                             </div>
                         </div>

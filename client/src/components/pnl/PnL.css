@@ -466,34 +466,36 @@
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     padding: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: center;
 }
 
-.trade-history-table .td.type {
-    font-weight: 500;
+.trade-history-table .td {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
 }
 
-.trade-history-table .td.type.buy {
-    color: #00C853;
+/* Align numbers to the right */
+.trade-history-table .td[data-label="Entry"],
+.trade-history-table .td[data-label="Exit"],
+.trade-history-table .td[data-label="PnL"],
+.trade-history-table .td[data-label="ROI"] {
+    justify-content: flex-end;
 }
 
-.trade-history-table .td.type.sell {
-    color: #FF3E8F;
+/* Center the Type column */
+.trade-history-table .td[data-label="Type"] {
+    justify-content: center;
 }
 
-.trade-history-table .td.pnl,
-.trade-history-table .td.roi {
-    font-weight: 500;
+/* Left align the Date and Amount columns */
+.trade-history-table .td[data-label="Date"],
+.trade-history-table .td[data-label="Amount"] {
+    justify-content: flex-start;
 }
 
-.trade-history-table .td.positive {
-    color: #00C853;
-}
-
-.trade-history-table .td.negative {
-    color: #FF3E8F;
-}
-
-/* Mobile Responsive */
+/* Mobile responsive adjustments */
 @media (max-width: 768px) {
     .trade-history-header {
         flex-direction: column;
@@ -526,11 +528,11 @@
     }
 
     .trade-history-table .td {
-        display: flex;
-        justify-content: space-between;
+        justify-content: space-between !important;
+        padding: 8px 0;
     }
 
-    .trade-history-table .td:before {
+    .trade-history-table .td::before {
         content: attr(data-label);
         font-weight: 500;
         color: var(--text-secondary);
@@ -704,4 +706,44 @@
 
 .date-picker-group span {
     color: var(--text-secondary);
+}
+
+/* Trade History Table Styles */
+.trade-history-table .td .type {
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+.trade-history-table .td .type.buy {
+    color: #00C853;
+    background: rgba(0, 200, 83, 0.1);
+}
+
+.trade-history-table .td .type.sell {
+    color: #FF3E8F;
+    background: rgba(255, 62, 143, 0.1);
+}
+
+.trade-history-table .td.positive {
+    color: #00C853;
+    font-weight: 500;
+}
+
+.trade-history-table .td.negative {
+    color: #FF3E8F;
+    font-weight: 500;
+}
+
+/* Add these styles to make the mobile view consistent */
+@media (max-width: 768px) {
+    .trade-history-table .td.positive,
+    .trade-history-table .td.negative {
+        justify-content: space-between;
+    }
+
+    .trade-history-table .td .type {
+        min-width: 80px;
+        text-align: center;
+    }
 }
