@@ -190,13 +190,14 @@
         left: 0;
         right: 0;
         background: rgba(19, 19, 19, 0.98);
-        padding: 1rem;
+        padding: 20px;
         flex-direction: column;
-        gap: 1rem;
+        gap: 20px;
         transform: translateY(-100%);
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .navbar-content.active {
@@ -208,23 +209,27 @@
     .nav-links {
         flex-direction: column;
         width: 100%;
-        text-align: center;
+        gap: 12px;
     }
 
     .nav-link {
-        display: block;
+        width: 100%;
+        text-align: center;
         padding: 12px;
     }
 
     .auth-buttons {
         width: 100%;
         flex-direction: column;
+        gap: 12px;
     }
 
     .login-btn,
     .signup-btn {
         width: 100%;
         padding: 12px;
+        text-align: center;
+        font-size: 15px;
     }
 
     .user-menu {
@@ -234,6 +239,7 @@
     .user-menu-btn {
         width: 100%;
         justify-content: center;
+        padding: 12px;
     }
 
     .dropdown-menu {
@@ -241,9 +247,15 @@
         width: 100%;
         margin-top: 8px;
         transform: none;
+        box-shadow: none;
     }
 
     .dropdown-menu.active {
         transform: none;
+    }
+
+    .dropdown-item {
+        padding: 12px;
+        justify-content: center;
     }
 }
