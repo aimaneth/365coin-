@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './auth/LoginModal';
@@ -8,7 +8,6 @@ import './Navbar.css';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
-    const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
@@ -18,10 +17,7 @@ const Navbar = () => {
     const location = useLocation();
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
-        };
-
+        const handleScroll = () => setIsScrolled(window.scrollY > 50);
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowUserDropdown(false);
@@ -37,94 +33,88 @@ const Navbar = () => {
         };
     }, []);
 
-    const handleMobileMenuClick = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
-
-    const closeMobileMenu = () => {
+    // Close mobile menu when route changes
+    useEffect(() => {
         setIsMobileMenuOpen(false);
         setShowUserDropdown(false);
-    };
+    }, [location]);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         try {
-            logout();
+            await logout();
             setShowUserDropdown(false);
-            closeMobileMenu();
-            navigate('/');
-            console.log('Successfully logged out');
+            setIsMobileMenuOpen(false);
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
-    const getUserInitials = () => {
-        return user?.username?.charAt(0).toUpperCase() || 'U';
-    };
-
     return (
         <>
             <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
-                <div className="navbar-left">
+                <div className="navbar-container">
                     <Link to="/" className="navbar-brand">
                         <img src="/images/logo.png" alt="365 Coin" className="brand-logo" />
                     </Link>
-                    <Link to="/" className="nav-item" onClick={closeMobileMenu}>Home</Link>
-                    <Link to="/pnl" className="nav-item" onClick={closeMobileMenu}>PnL</Link>
-                    <Link to="/packages" className="nav-item" onClick={closeMobileMenu}>Packages</Link>
-                </div>
 
-                <button 
-                    className="mobile-menu-btn"
-                    onClick={handleMobileMenuClick}
-                    aria-label="Toggle menu"
-                >
-                    {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
-                </button>
+                    <button 
+                        className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                    </button>
 
-                <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-                    {user ? (
-                        <div className="user-menu" ref={dropdownRef}>
-                            <div 
-                                className="user-avatar"
-                                onClick={() => setShowUserDropdown(!showUserDropdown)}
-                            >
-                                {getUserInitials()}
-                            </div>
-                            {showUserDropdown && (
-                                <div className="user-dropdown">
-                                    <Link to="/profile" className="dropdown-item" onClick={closeMobileMenu}>
-                                        <FaUser /> Profile
-                                    </Link>
-                                    <Link to="/settings" className="dropdown-item" onClick={closeMobileMenu}>
-                                        <FaCog /> Settings
-                                    </Link>
-                                    <div className="dropdown-divider"></div>
+                    <div className={`navbar-content ${isMobileMenuOpen ? 'active' : ''}`}>
+                        <div className="nav-links">
+                            <Link to="/" className="nav-link">Home</Link>
+                            <Link to="/packages" className="nav-link">Packages</Link>
+                            <Link to="/pnl" className="nav-link">PnL</Link>
+                        </div>
+
+                        <div className="auth-section">
+                            {user ? (
+                                <div className="user-menu" ref={dropdownRef}>
                                     <button 
-                                        className="dropdown-item logout-btn" 
-                                        onClick={handleLogout}
+                                        className="user-menu-btn"
+                                        onClick={() => setShowUserDropdown(!showUserDropdown)}
                                     >
-                                        <FaSignOutAlt /> Logout
+                                        <div className="user-avatar">
+                                            {user.username[0].toUpperCase()}
+                                        </div>
+                                        <span className="username">{user.username}</span>
+                                    </button>
+
+                                    <div className={`dropdown-menu ${showUserDropdown ? 'active' : ''}`}>
+                                        <Link to="/profile" className="dropdown-item">
+                                            <FaUser /> Profile
+                                        </Link>
+                                        <Link to="/settings" className="dropdown-item">
+                                            <FaCog /> Settings
+                                        </Link>
+                                        <button onClick={handleLogout} className="dropdown-item">
+                                            <FaSignOutAlt /> Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="auth-buttons">
+                                    <button 
+                                        onClick={() => setShowLoginModal(true)} 
+                                        className="login-btn"
+                                    >
+                                        Login
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowSignupModal(true)} 
+                                        className="signup-btn"
+                                    >
+                                        Sign Up
                                     </button>
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <div className="auth-buttons">
-                            <button 
-                                onClick={() => setShowLoginModal(true)} 
-                                className="auth-btn login-btn"
-                            >
-                                Login
-                            </button>
-                            <button 
-                                onClick={() => setShowSignupModal(true)} 
-                                className="auth-btn signup-btn"
-                            >
-                                Sign Up
-                            </button>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </nav>
 
