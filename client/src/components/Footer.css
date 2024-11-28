@@ -8,19 +8,26 @@
 .footer-content {
     max-width: 1400px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 48px;
 }
 
-.footer-section {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+.footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+}
+
+.footer-brand {
+    max-width: 400px;
 }
 
 .footer-logo {
-    height: 40px;
+    display: block;
+    margin-bottom: 24px;
+}
+
+.footer-logo img {
+    height: 32px; /* Fixed logo size */
     width: auto;
 }
 
@@ -28,40 +35,41 @@
     color: var(--text-secondary);
     font-size: 15px;
     line-height: 1.6;
-    max-width: 400px;
+    margin-bottom: 24px;
 }
 
-.social-links {
+.footer-social {
     display: flex;
     gap: 16px;
 }
 
-.social-links a {
+.social-link {
     color: var(--text-secondary);
-    font-size: 24px;
     transition: all 0.3s ease;
 }
 
-.social-links a:hover {
+.social-link:hover {
     color: var(--primary);
     transform: translateY(-2px);
 }
 
-.footer-section h3 {
+.footer-links-section h4 {
     font-size: 18px;
     font-weight: 600;
+    margin-bottom: 24px;
     color: var(--text);
 }
 
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .footer-link {
-    background: none;
-    border: none;
     color: var(--text-secondary);
-    font-size: 15px;
-    text-align: left;
-    padding: 8px 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .footer-link:hover {
@@ -69,132 +77,62 @@
 }
 
 .footer-bottom {
-    max-width: 1400px;
-    margin: 48px auto 0;
     padding-top: 24px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-copyright {
     color: var(--text-secondary);
     font-size: 14px;
 }
 
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
+.footer-bottom-links {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 24px;
+    gap: 24px;
 }
 
-.modal {
-    background: rgba(30, 30, 30, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 32px;
-    max-width: 800px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-close {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: none;
-    border: none;
+.footer-bottom-link {
     color: var(--text-secondary);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 8px;
-    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
 }
 
-.modal-close:hover {
-    color: var(--text);
-}
-
-.modal-content {
-    color: var(--text);
-}
-
-.modal-content h2 {
-    font-size: 28px;
-    margin-bottom: 32px;
-    color: var(--text);
-}
-
-.modal-content section {
-    margin-bottom: 32px;
-}
-
-.modal-content h3 {
-    font-size: 20px;
-    margin-bottom: 16px;
+.footer-bottom-link:hover {
     color: var(--primary);
 }
 
-.modal-content p {
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-    line-height: 1.6;
+@media (max-width: 1024px) {
+    .footer-main {
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 32px;
+    }
 }
 
-.modal-content ul {
-    list-style: none;
-    padding: 0;
-}
-
-.modal-content li {
-    color: var(--text-secondary);
-    padding: 8px 0;
-    padding-left: 24px;
-    position: relative;
-    line-height: 1.6;
-}
-
-.modal-content li:before {
-    content: "•";
-    color: var(--primary);
-    position: absolute;
-    left: 0;
-}
-
-/* Mobile Responsive */
 @media (max-width: 768px) {
     .footer {
-        padding: 40px 16px 24px;
+        padding: 40px 20px 20px;
     }
 
-    .footer-content {
+    .footer-main {
         grid-template-columns: 1fr;
         gap: 32px;
     }
 
-    .modal {
-        padding: 24px;
-        margin: 16px;
+    .footer-brand {
+        max-width: 100%;
     }
 
-    .modal-content h2 {
-        font-size: 24px;
-        margin-bottom: 24px;
+    .footer-bottom {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
     }
 
-    .modal-content h3 {
-        font-size: 18px;
+    .footer-bottom-links {
+        justify-content: center;
     }
-
-    .modal-close {
-        top: 16px;
-        right: 16px;
-    }
-} 
+}
