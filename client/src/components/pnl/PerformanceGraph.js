@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -24,6 +24,8 @@ ChartJS.register(
 );
 
 const PerformanceGraph = ({ data, timeframe }) => {
+    const chartRef = useRef(null);
+
     const options = {
         responsive: true,
         maintainAspectRatio: false,
@@ -39,16 +41,25 @@ const PerformanceGraph = ({ data, timeframe }) => {
                 enabled: true,
                 mode: 'index',
                 intersect: false,
+                padding: 12,
                 backgroundColor: 'rgba(30, 30, 30, 0.95)',
-                titleColor: '#f0c000',
-                bodyColor: '#fff',
                 borderColor: 'rgba(255, 255, 255, 0.1)',
                 borderWidth: 1,
-                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                bodySpacing: 8,
+                titleSpacing: 8,
+                bodyFont: {
+                    size: 14
+                },
+                titleFont: {
+                    size: 14,
+                    weight: 'bold'
+                },
                 displayColors: false,
                 callbacks: {
                     label: function(context) {
-                        return `$${context.parsed.y.toLocaleString()}`;
+                        return `${context.parsed.y.toFixed(2)}%`;
                     }
                 }
             }
@@ -64,10 +75,8 @@ const PerformanceGraph = ({ data, timeframe }) => {
                     font: {
                         size: 12
                     },
-                    maxRotation: 0
-                },
-                border: {
-                    display: false
+                    maxRotation: 0,
+                    maxTicksLimit: 8
                 }
             },
             y: {
@@ -80,13 +89,10 @@ const PerformanceGraph = ({ data, timeframe }) => {
                     font: {
                         size: 12
                     },
-                    callback: (value) => `$${value.toLocaleString()}`,
-                    padding: 10
-                },
-                border: {
-                    display: false
-                },
-                beginAtZero: true
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
             }
         },
         elements: {
@@ -96,7 +102,8 @@ const PerformanceGraph = ({ data, timeframe }) => {
                 borderColor: '#f0c000',
                 fill: true,
                 backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
+                    if (!chartRef.current) return 'rgba(240, 192, 0, 0.1)';
+                    const ctx = chartRef.current.ctx;
                     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
                     gradient.addColorStop(0, 'rgba(240, 192, 0, 0.2)');
                     gradient.addColorStop(1, 'rgba(240, 192, 0, 0)');
@@ -114,11 +121,28 @@ const PerformanceGraph = ({ data, timeframe }) => {
         }
     };
 
+    // Handle resize
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartRef.current) {
+                chartRef.current.resize();
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
-        <div className="performance-graph" style={{ height: '400px' }}>
-            <Line data={data} options={options} />
+        <div className="performance-graph">
+            <Line 
+                ref={chartRef}
+                data={data} 
+                options={options}
+                redraw={false}
+            />
         </div>
     );
 };
 
-export default PerformanceGraph; 
+export default React.memo(PerformanceGraph); 

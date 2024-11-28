@@ -1,55 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 
-const TradingGraph = () => {
+const TradingGraph = ({ data, trades }) => {
     const chartContainerRef = useRef(null);
     const chartRef = useRef(null);
-
-    // Generate mock candlestick data
-    const generateMockData = () => {
-        const data = [];
-        let basePrice = 45000;
-        const now = new Date();
-
-        for (let i = 30; i >= 0; i--) {
-            const date = new Date(now);
-            date.setDate(date.getDate() - i);
-            
-            const volatility = 0.02;
-            const open = basePrice * (1 + (Math.random() - 0.5) * volatility);
-            const close = open * (1 + (Math.random() - 0.5) * volatility);
-            const high = Math.max(open, close) * (1 + Math.random() * 0.01);
-            const low = Math.min(open, close) * (1 - Math.random() * 0.01);
-
-            data.push({
-                time: date.getTime() / 1000,
-                open,
-                high,
-                low,
-                close,
-            });
-
-            basePrice = close;
-        }
-        return data;
-    };
-
-    // Generate mock trades
-    const generateMockTrades = (candleData) => {
-        const trades = [];
-        candleData.forEach((candle, index) => {
-            if (Math.random() > 0.8) { // 20% chance of trade
-                const isLong = Math.random() > 0.5;
-                trades.push({
-                    time: candle.time,
-                    price: isLong ? candle.low : candle.high,
-                    type: isLong ? 'buy' : 'sell',
-                    size: Math.floor(Math.random() * 5 + 1),
-                });
-            }
-        });
-        return trades;
-    };
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -57,21 +11,22 @@ const TradingGraph = () => {
         // Create chart
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: 'solid', color: 'transparent' },
+                background: { color: 'transparent' },
                 textColor: '#B0B0B0',
-                fontSize: 12,
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: 'Inter, sans-serif',
             },
             grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
             },
-            width: chartContainerRef.current.clientWidth,
-            height: chartContainerRef.current.clientHeight,
             timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)',
                 timeVisible: true,
                 secondsVisible: false,
-                borderColor: 'rgba(255, 255, 255, 0.1)',
+                tickMarkFormatter: (time) => {
+                    const date = new Date(time * 1000);
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                },
             },
             rightPriceScale: {
                 borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -83,19 +38,25 @@ const TradingGraph = () => {
             crosshair: {
                 mode: 1,
                 vertLine: {
-                    color: '#f0c000',
+                    color: 'rgba(240, 192, 0, 0.3)',
                     labelBackgroundColor: '#f0c000',
                 },
                 horzLine: {
-                    color: '#f0c000',
+                    color: 'rgba(240, 192, 0, 0.3)',
                     labelBackgroundColor: '#f0c000',
                 },
             },
+            handleScroll: {
+                mouseWheel: true,
+                pressedMouseMove: true,
+                horzTouchDrag: true,
+                vertTouchDrag: true,
+            },
             handleScale: {
+                axisPressedMouseMove: true,
                 mouseWheel: true,
                 pinch: true,
-                axisPressedMouseMove: true,
-            },
+            }
         });
 
         // Add candlestick series
@@ -107,31 +68,86 @@ const TradingGraph = () => {
             wickDownColor: '#FF3E8F',
         });
 
-        // Add markers series
-        const markersSeries = chart.addCandlestickSeries({
-            lastValueVisible: false,
-            priceLineVisible: false,
+        // Add volume series
+        const volumeSeries = chart.addHistogramSeries({
+            color: '#26a69a',
+            priceFormat: {
+                type: 'volume',
+            },
+            priceScaleId: '',
+            scaleMargins: {
+                top: 0.8,
+                bottom: 0,
+            },
         });
 
-        // Generate and set data
-        const candleData = generateMockData();
-        const trades = generateMockTrades(candleData);
+        // Set mock data if no data provided
+        if (!data || data.length === 0) {
+            const currentTime = Math.floor(Date.now() / 1000);
+            const mockData = Array.from({ length: 100 }, (_, i) => {
+                const time = currentTime - (100 - i) * 300;
+                const basePrice = 100 + Math.sin(i * 0.1) * 20;
+                const range = 5 + Math.random() * 5;
+                const open = basePrice + (Math.random() - 0.5) * range;
+                const close = basePrice + (Math.random() - 0.5) * range;
+                const high = Math.max(open, close) + Math.random() * 2;
+                const low = Math.min(open, close) - Math.random() * 2;
+                const volume = 1000 + Math.random() * 2000;
 
-        // Set candlestick data
-        candlestickSeries.setData(candleData);
+                return {
+                    time,
+                    open,
+                    high,
+                    low,
+                    close,
+                    volume
+                };
+            });
+
+            candlestickSeries.setData(mockData);
+            volumeSeries.setData(mockData.map(d => ({
+                time: d.time,
+                value: d.volume,
+                color: d.close >= d.open ? '#26a69a55' : '#ef535055'
+            })));
+        } else {
+            candlestickSeries.setData(data);
+            // Add actual volume data if available
+        }
 
         // Add trade markers
-        trades.forEach(trade => {
-            const marker = {
+        if (trades && trades.length > 0) {
+            const markers = trades.map(trade => ({
                 time: trade.time,
                 position: trade.type === 'buy' ? 'belowBar' : 'aboveBar',
                 color: trade.type === 'buy' ? '#00C853' : '#FF3E8F',
                 shape: trade.type === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: `${trade.type.toUpperCase()} ${trade.size} BTC`,
-                size: 1,
-            };
-            candlestickSeries.setMarkers([marker]);
-        });
+                text: `${trade.type.toUpperCase()} ${trade.amount}`,
+                size: 2,
+            }));
+            candlestickSeries.setMarkers(markers);
+        } else {
+            // Add mock trade markers
+            const mockTrades = [
+                {
+                    time: currentTime - 60,
+                    position: 'belowBar',
+                    color: '#00C853',
+                    shape: 'arrowUp',
+                    text: 'BUY 0.5 BTC',
+                    size: 2,
+                },
+                {
+                    time: currentTime - 30,
+                    position: 'aboveBar',
+                    color: '#FF3E8F',
+                    shape: 'arrowDown',
+                    text: 'SELL 0.5 BTC',
+                    size: 2,
+                }
+            ];
+            candlestickSeries.setMarkers(mockTrades);
+        }
 
         // Fit content
         chart.timeScale().fitContent();
@@ -156,19 +172,15 @@ const TradingGraph = () => {
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, []);
+    }, [data, trades]);
 
     return (
         <div 
             ref={chartContainerRef} 
-            style={{ 
-                width: '100%', 
-                height: '100%',
-                minHeight: '300px',
-                position: 'relative'
-            }}
+            className="trading-graph"
+            style={{ width: '100%', height: '100%' }}
         />
     );
 };
 
-export default TradingGraph; 
+export default React.memo(TradingGraph); 
