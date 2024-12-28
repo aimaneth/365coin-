@@ -75,6 +75,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - [@aimaneth](https://github.com/aimaneth)
+Name - [@aimaneth](https://github.com/aimaneth)
 
 Project Link: [https://github.com/aimaneth/365coin-](https://github.com/aimaneth/365coin-)
