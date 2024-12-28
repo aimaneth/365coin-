@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaRocket, FaChartLine, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
-import PresaleCard from './PresaleCard';
+import { FaUsers, FaClock } from 'react-icons/fa';
+import { SiBinance } from 'react-icons/si';
+import PresaleCard from './presale/PresaleCard';
 import './Hero.css';
 
 const Hero = () => {

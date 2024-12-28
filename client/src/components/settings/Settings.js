@@ -1,43 +1,58 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaUser, FaCamera, FaWallet, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
+import { useWeb3React } from '@web3-react/core';
+import { FaWallet, FaTrash, FaCheck, FaUser, FaCamera, FaEdit, FaTimes, FaCopy, FaArrowLeft, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Settings.css';
 
 const Settings = () => {
-    const { user, updateProfile } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const fromProfile = location.state?.from === 'profile';
+    const { user, disconnectWalletFromAccount, updateProfile, updatePassword } = useAuth();
+    const { active, account, deactivate } = useWeb3React();
+    const [disconnecting, setDisconnecting] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [profileData, setProfileData] = useState({
-        username: user?.username || '',
-        email: user?.email || '',
-    });
-    const [avatar, setAvatar] = useState(user?.avatar || null);
-    const [previewAvatar, setPreviewAvatar] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [profileData, setProfileData] = useState({
+        displayName: user?.displayName || '',
+        email: user?.email || '',
+    });
+    const [avatar, setAvatar] = useState(user?.photoURL || null);
+    const [previewAvatar, setPreviewAvatar] = useState(null);
     const fileInputRef = useRef(null);
+    const [copiedAddress, setCopiedAddress] = useState(null);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const handleEditToggle = () => {
         setIsEditing(!isEditing);
         if (!isEditing) {
             setProfileData({
-                username: user?.username || '',
+                displayName: user?.displayName || '',
                 email: user?.email || '',
             });
             setPreviewAvatar(null);
         }
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setProfileData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setError('');
+        setSuccess('');
     };
 
     const handleAvatarClick = () => {
-        fileInputRef.current?.click();
+        if (isEditing) {
+            fileInputRef.current?.click();
+        }
     };
 
     const handleAvatarChange = (e) => {
@@ -66,7 +81,7 @@ const Settings = () => {
         try {
             await updateProfile({
                 ...profileData,
-                avatar: avatar
+                photoURL: avatar
             });
             setSuccess('Profile updated successfully!');
             setIsEditing(false);
@@ -77,18 +92,108 @@ const Settings = () => {
         }
     };
 
+    const handleDisconnectWallet = async (walletAddress) => {
+        try {
+            setDisconnecting(walletAddress);
+            
+            if (active && account?.toLowerCase() === walletAddress.toLowerCase()) {
+                await deactivate();
+            }
+
+            await disconnectWalletFromAccount(walletAddress);
+        } catch (error) {
+            console.error('Error disconnecting wallet:', error);
+        } finally {
+            setDisconnecting(null);
+        }
+    };
+
+    const handleCopyAddress = (address) => {
+        navigator.clipboard.writeText(address);
+        setCopiedAddress(address);
+        setTimeout(() => setCopiedAddress(null), 2000);
+    };
+
+    const handleBack = () => {
+        navigate('/profile');
+    };
+
+    const validatePassword = (password) => {
+        const minLength = 8;
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        if (password.length < minLength) {
+            return 'Password must be at least 8 characters long';
+        }
+        if (!hasUpperCase) {
+            return 'Password must contain at least one uppercase letter';
+        }
+        if (!hasLowerCase) {
+            return 'Password must contain at least one lowercase letter';
+        }
+        if (!hasNumbers) {
+            return 'Password must contain at least one number';
+        }
+        if (!hasSpecialChar) {
+            return 'Password must contain at least one special character';
+        }
+        return '';
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+        setIsChangingPassword(true);
+
+        try {
+            // Validate new password
+            const validationError = validatePassword(passwordData.newPassword);
+            if (validationError) {
+                throw new Error(validationError);
+            }
+
+            // Check if passwords match
+            if (passwordData.newPassword !== passwordData.confirmPassword) {
+                throw new Error('New passwords do not match');
+            }
+
+            // Update password through AuthContext
+            await updatePassword(passwordData.currentPassword, passwordData.newPassword);
+            
+            setPasswordSuccess('Password updated successfully!');
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+        } catch (err) {
+            setPasswordError(err.message || 'Failed to update password');
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
     return (
         <div className="settings-container">
             <div className="settings-header">
-                <h1>Account Settings</h1>
-                <p>Manage your profile and preferences</p>
+                {fromProfile && (
+                    <button className="back-btn" onClick={handleBack}>
+                        <FaArrowLeft />
+                        <span>Back to Profile</span>
+                    </button>
+                )}
+                <h1>Settings</h1>
             </div>
 
-            <div className="settings-grid">
-                {/* Profile Section */}
-                <div className="settings-card">
-                    <div className="settings-card-header">
-                        <h2>Profile Information</h2>
+            <div className="settings-content">
+                {/* Profile Settings Section */}
+                <div className="settings-section">
+                    <div className="section-header">
+                        <h2>Profile Settings</h2>
                         <button 
                             className={`edit-btn ${isEditing ? 'active' : ''}`}
                             onClick={handleEditToggle}
@@ -108,10 +213,10 @@ const Settings = () => {
                     {error && <div className="error-message">{error}</div>}
                     {success && <div className="success-message">{success}</div>}
 
-                    <form onSubmit={handleSubmit} className="settings-form">
+                    <form onSubmit={handleSubmit} className="profile-form">
                         <div className="avatar-section">
                             <div 
-                                className="avatar-upload"
+                                className={`avatar-upload ${isEditing ? 'editable' : ''}`}
                                 onClick={handleAvatarClick}
                             >
                                 {previewAvatar || avatar ? (
@@ -122,7 +227,7 @@ const Settings = () => {
                                     />
                                 ) : (
                                     <div className="avatar-placeholder">
-                                        {user?.username?.charAt(0).toUpperCase() || <FaUser />}
+                                        {user?.displayName?.[0] || user?.email?.[0] || <FaUser />}
                                     </div>
                                 )}
                                 {isEditing && (
@@ -142,14 +247,17 @@ const Settings = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>Username</label>
+                            <label>Display Name</label>
                             <input
                                 type="text"
-                                name="username"
-                                value={profileData.username}
-                                onChange={handleInputChange}
+                                name="displayName"
+                                value={profileData.displayName}
+                                onChange={(e) => setProfileData(prev => ({
+                                    ...prev,
+                                    displayName: e.target.value
+                                }))}
                                 disabled={!isEditing}
-                                required
+                                placeholder="Enter your display name"
                             />
                         </div>
 
@@ -159,9 +267,8 @@ const Settings = () => {
                                 type="email"
                                 name="email"
                                 value={profileData.email}
-                                onChange={handleInputChange}
-                                disabled={!isEditing}
-                                required
+                                disabled={true}
+                                readOnly
                             />
                         </div>
 
@@ -171,7 +278,9 @@ const Settings = () => {
                                 className="save-btn"
                                 disabled={loading}
                             >
-                                {loading ? 'Saving...' : (
+                                {loading ? (
+                                    'Saving...'
+                                ) : (
                                     <>
                                         <FaCheck /> Save Changes
                                     </>
@@ -181,31 +290,177 @@ const Settings = () => {
                     </form>
                 </div>
 
-                {/* Connected Wallets Section */}
-                <div className="settings-card">
-                    <div className="settings-card-header">
-                        <h2>Connected Wallets</h2>
+                {/* Password Change Section */}
+                <div className="settings-section">
+                    <div className="section-header">
+                        <h2>Change Password</h2>
+                        <div className="password-icon">
+                            <FaLock />
+                        </div>
                     </div>
-                    <div className="wallets-list">
-                        {user?.walletAddresses?.map((wallet, index) => (
-                            <div key={index} className="wallet-item">
+
+                    {passwordError && <div className="error-message">{passwordError}</div>}
+                    {passwordSuccess && <div className="success-message">{passwordSuccess}</div>}
+
+                    <form onSubmit={handlePasswordChange} className="password-form">
+                        <div className="password-form-inputs">
+                            <div className="form-group">
+                                <label>Current Password</label>
+                                <div className="password-input-container">
+                                    <input
+                                        type={showCurrentPassword ? "text" : "password"}
+                                        value={passwordData.currentPassword}
+                                        onChange={(e) => setPasswordData(prev => ({
+                                            ...prev,
+                                            currentPassword: e.target.value
+                                        }))}
+                                        placeholder="Enter current password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="toggle-password"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    >
+                                        {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>New Password</label>
+                                <div className="password-input-container">
+                                    <input
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={passwordData.newPassword}
+                                        onChange={(e) => setPasswordData(prev => ({
+                                            ...prev,
+                                            newPassword: e.target.value
+                                        }))}
+                                        placeholder="Enter new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="toggle-password"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                    >
+                                        {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Confirm New Password</label>
+                                <div className="password-input-container">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={passwordData.confirmPassword}
+                                        onChange={(e) => setPasswordData(prev => ({
+                                            ...prev,
+                                            confirmPassword: e.target.value
+                                        }))}
+                                        placeholder="Confirm new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="toggle-password"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="save-btn"
+                                disabled={isChangingPassword}
+                            >
+                                {isChangingPassword ? (
+                                    'Updating Password...'
+                                ) : (
+                                    <>
+                                        <FaLock /> Update Password
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="password-requirements">
+                            <p>Password must contain:</p>
+                            <ul>
+                                <li>At least 8 characters</li>
+                                <li>One uppercase letter</li>
+                                <li>One lowercase letter</li>
+                                <li>One number</li>
+                                <li>One special character</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Connected Wallets Section */}
+                <div className="settings-section">
+                    <div className="section-header">
+                        <h2>Connected Wallets</h2>
+                        <div className="wallet-count">
+                            {user?.walletAddresses?.length || 0} Wallet{user?.walletAddresses?.length !== 1 ? 's' : ''} Connected
+                        </div>
+                    </div>
+
+                    <div className="connected-wallets-list">
+                        {user?.walletAddresses?.map((wallet) => (
+                            <div key={wallet.address} className="wallet-item">
                                 <div className="wallet-info">
-                                    <FaWallet className="wallet-icon" />
+                                    <div className="wallet-icon">
+                                        <FaWallet />
+                                    </div>
                                     <div className="wallet-details">
-                                        <span className="wallet-address">
-                                            {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
-                                        </span>
-                                        <span className="wallet-network">{wallet.network}</span>
+                                        <div className="wallet-name">Wallet {user?.walletAddresses?.indexOf(wallet) + 1}</div>
+                                        <div className="wallet-meta">
+                                            <div className="wallet-address">
+                                                {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                                                <button 
+                                                    className="copy-address-btn"
+                                                    onClick={() => handleCopyAddress(wallet.address)}
+                                                    title="Copy address"
+                                                >
+                                                    {copiedAddress === wallet.address ? (
+                                                        <FaCheck className="copied" />
+                                                    ) : (
+                                                        <FaCopy />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <div className="wallet-network">BSC Network</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <span className="wallet-date">
-                                    Added {new Date(wallet.dateAdded).toLocaleDateString()}
-                                </span>
+                                <button
+                                    className="disconnect-wallet-btn"
+                                    onClick={() => handleDisconnectWallet(wallet.address)}
+                                    disabled={disconnecting === wallet.address}
+                                >
+                                    {disconnecting === wallet.address ? (
+                                        <>
+                                            <FaCheck />
+                                            Disconnecting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaTrash />
+                                            Disconnect
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         ))}
-                        <button className="add-wallet-btn">
-                            <FaWallet /> Connect New Wallet
-                        </button>
+                        {!user?.walletAddresses?.length && (
+                            <div className="no-wallets-message">
+                                <FaWallet className="empty-wallet-icon" />
+                                <p>No wallets connected</p>
+                                <span>Add a wallet from your profile page to get started</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

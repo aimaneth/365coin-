@@ -374,4 +374,11 @@
 
 .modal-content.has-back-button h2 {
     margin-top: 40px;
+}
+
+.field-error {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    margin-left: 0.5rem;
 } 

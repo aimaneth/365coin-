@@ -1,43 +1,43 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const walletAddressSchema = new mongoose.Schema({
+    address: {
+        type: String,
+        required: true
+    },
+    network: {
+        type: String,
+        required: true,
+        default: 'BSC'
+    },
+    dateAdded: {
+        type: Date,
+        default: Date.now
+    }
+});
 
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: [true, 'Username is required'],
+        required: true,
         unique: true,
-        trim: true,
-        minlength: [3, 'Username must be at least 3 characters long'],
-        maxlength: [30, 'Username cannot exceed 30 characters']
+        trim: true
     },
     email: {
         type: String,
-        required: [true, 'Email is required'],
+        required: true,
         unique: true,
         trim: true,
-        lowercase: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        lowercase: true
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long']
+        required: true,
+        select: false
     },
-    walletAddresses: [{
-        address: {
-            type: String,
-            unique: true,
-            sparse: true
-        },
-        network: {
-            type: String,
-            default: 'BSC'
-        },
-        dateAdded: {
-            type: Date,
-            default: Date.now
-        }
-    }],
+    walletAddresses: [walletAddressSchema],
     createdAt: {
         type: Date,
         default: Date.now
@@ -46,16 +46,27 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
     next();
 });
 
-// Add this method to the userSchema
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+// Generate auth token
+userSchema.methods.generateAuthToken = function() {
+    return jwt.sign(
+        { userId: this._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+    );
 };
 
-export default mongoose.models.User || mongoose.model('User', userSchema); 
+// Remove sensitive data when converting to JSON
+userSchema.methods.toJSON = function() {
+    const user = this.toObject();
+    delete user.password;
+    return user;
+};
+
+export const User = mongoose.model('User', userSchema);
+export default User; 

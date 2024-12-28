@@ -2,19 +2,23 @@
   "name": "365coin",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "node api/server.js",
     "server": "nodemon api/server.js",
     "client": "cd client && npm start",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "cd client && npm install && npm run build"
+    "build": "cd client && npm install && npm run build",
+    "generate-jwt": "node scripts/generate-jwt-secret.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "dotenv": "^16.4.5",
-    "jsonwebtoken": "^9.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.11.0",
-    "mongoose": "^6.12.0"
+    "mongoose": "^6.13.5"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

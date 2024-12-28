@@ -1,277 +1,151 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [token, setToken] = useState(localStorage.getItem('token'));
 
+    // Check token and restore session on mount
     useEffect(() => {
-        // Check if user is logged in from localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
+        const initializeAuth = async () => {
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
+                try {
+                    // Set default axios header
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+                    
+                    // Verify token and get user data
+                    const response = await axios.get('/api/auth/me');
+                    setUser(response.data);
+                    setToken(storedToken);
+                } catch (error) {
+                    console.error('Session restoration failed:', error);
+                    // If token is invalid, clear everything
+                    localStorage.removeItem('token');
+                    delete axios.defaults.headers.common['Authorization'];
+                    setUser(null);
+                    setToken(null);
+                }
+            }
+            setLoading(false);
+        };
+
+        initializeAuth();
     }, []);
+
+    // Add axios default header when token exists
+    useEffect(() => {
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+            delete axios.defaults.headers.common['Authorization'];
+        }
+    }, [token]);
 
     const signup = async (email, password, username) => {
         try {
-            console.log('Attempting signup with:', { email, username });
-            
-            const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ email, password, username })
+            const response = await axios.post('/api/auth/signup', {
+                email,
+                password,
+                username
             });
-            
-            const data = await response.json();
-            console.log('Response:', data);
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Signup failed');
-            }
-            
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setUser(data.user);
-            return data;
+            setUser(response.data.user);
+            setToken(response.data.token);
+            localStorage.setItem('token', response.data.token);
+            return response.data;
         } catch (error) {
             console.error('Signup Error:', error);
-            throw error;
+            throw error.response?.data?.message || 'Signup failed';
         }
     };
 
     const login = async (email, password) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
+            const response = await axios.post('/api/auth/login', {
+                email,
+                password
             });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
-            }
-            
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setUser(data.user);
-            return data;
+            setUser(response.data.user);
+            setToken(response.data.token);
+            localStorage.setItem('token', response.data.token);
+            return response.data;
         } catch (error) {
             console.error('Login Error:', error);
-            throw error;
+            throw error.response?.data?.message || 'Login failed';
         }
     };
 
     const logout = async () => {
         try {
-            // Clear user data
+            if (token) {
+                await axios.post('/api/auth/logout');
+            }
+        } catch (error) {
+            console.error('Logout Error:', error);
+        } finally {
             setUser(null);
-            localStorage.removeItem('user');
+            setToken(null);
             localStorage.removeItem('token');
-
-            // If using Web3React, you can access it here to disconnect the wallet
-            if (window.ethereum) {
-                try {
-                    // Reset the connection
-                    await window.ethereum.request({
-                        method: 'wallet_requestPermissions',
-                        params: [{ eth_accounts: {} }]
-                    });
-                } catch (error) {
-                    console.log('Error resetting wallet connection:', error);
-                }
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-            throw error;
-        }
-    };
-
-    const resetPassword = async (email) => {
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/reset-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message);
-            }
-            
-            return true;
-        } catch (error) {
-            throw error;
+            delete axios.defaults.headers.common['Authorization'];
+            window.location.href = '/';
         }
     };
 
     const connectWalletToAccount = async (walletAddress) => {
         try {
-            if (!user) {
-                throw new Error('Must be logged in to connect wallet');
-            }
-
             console.log('Connecting wallet:', walletAddress);
-
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/connect-wallet`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    userId: user.id,
-                    walletAddress
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to connect wallet');
-            }
-
-            const data = await response.json();
+            const response = await axios.post('/api/auth/connect-wallet', { walletAddress });
+            console.log('Wallet connection response:', response.data);
             
-            // Update user state with new wallet info
-            setUser(prevUser => ({
-                ...prevUser,
-                walletAddresses: data.walletAddresses
-            }));
-
-            // Update localStorage
-            localStorage.setItem('user', JSON.stringify({
-                ...user,
-                walletAddresses: data.walletAddresses
-            }));
-
-            console.log('Wallet connected successfully:', data);
-            return data;
+            // Update the user state with the new wallet data
+            if (response.data.user) {
+                setUser(response.data.user);
+                return response.data;
+            } else {
+                throw new Error('Invalid response from server');
+            }
         } catch (error) {
-            console.error('Wallet connection error:', error);
-            throw error;
+            console.error('Wallet Connection Error:', error.response?.data || error);
+            throw error.response?.data?.message || error.message || 'Failed to connect wallet';
         }
     };
 
     const disconnectWalletFromAccount = async (walletAddress) => {
         try {
-            if (!user) {
-                throw new Error('Must be logged in to disconnect wallet');
-            }
-
-            console.log('Disconnecting wallet:', walletAddress);
-
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/disconnect-wallet`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    userId: user.id,
-                    walletAddress
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to disconnect wallet');
-            }
-
-            const data = await response.json();
-            
-            // Update user state with updated wallet list
-            setUser(prevUser => ({
-                ...prevUser,
-                walletAddresses: data.walletAddresses
-            }));
-
-            // Update localStorage
-            localStorage.setItem('user', JSON.stringify({
-                ...user,
-                walletAddresses: data.walletAddresses
-            }));
-
-            console.log('Wallet disconnected successfully');
-            return data;
+            const response = await axios.post('/api/auth/disconnect-wallet', { walletAddress });
+            setUser(response.data.user); // Update user data without the wallet
+            return response.data;
         } catch (error) {
-            console.error('Wallet disconnection error:', error);
-            throw error;
+            console.error('Wallet Disconnection Error:', error);
+            throw error.response?.data?.message || 'Failed to disconnect wallet';
         }
     };
 
-    // Add this method to verify token on app load
-    const verifyToken = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return null;
-
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-token`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                return null;
-            }
-
-            const data = await response.json();
-            return data.user;
-        } catch (error) {
-            console.error('Token verification error:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            return null;
-        }
+    const value = {
+        user,
+        token,
+        loading,
+        signup,
+        login,
+        logout,
+        connectWalletToAccount,
+        disconnectWalletFromAccount
     };
 
-    // Add to useEffect in AuthProvider
-    useEffect(() => {
-        const initAuth = async () => {
-            setLoading(true);
-            const verifiedUser = await verifyToken();
-            if (verifiedUser) {
-                setUser(verifiedUser);
-            }
-            setLoading(false);
-        };
-
-        initAuth();
-    }, []);
+    if (loading) {
+        return <div className="loading-spinner" />;
+    }
 
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            login, 
-            signup, 
-            logout, 
-            resetPassword, 
-            loading,
-            connectWalletToAccount,
-            disconnectWalletFromAccount
-        }}>
-            {!loading && children}
+        <AuthContext.Provider value={value}>
+            {children}
         </AuthContext.Provider>
     );
-};
+}
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}; 
+export function useAuth() {
+    return useContext(AuthContext);
+} 

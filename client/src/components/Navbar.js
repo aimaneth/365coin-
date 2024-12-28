@@ -42,10 +42,9 @@ const Navbar = () => {
     const handleLogout = async () => {
         try {
             await logout();
-            setShowUserDropdown(false);
-            setIsMobileMenuOpen(false);
+            // Logout is handled in the AuthContext including redirect
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('Logout failed:', error);
         }
     };
 

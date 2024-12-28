@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEnvelope, FaLock, FaTimes, FaGoogle, FaGithub } from 'react-icons/fa';
+import { FaEnvelope, FaEye, FaEyeSlash, FaTimes, FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import './AuthModals.css';
@@ -9,6 +9,7 @@ const LoginModal = ({ onClose, onSwitchToSignup }) => {
         email: '',
         password: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -16,6 +17,10 @@ const LoginModal = ({ onClose, onSwitchToSignup }) => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     const handleSubmit = async (e) => {
@@ -85,14 +90,20 @@ const LoginModal = ({ onClose, onSwitchToSignup }) => {
                     <div className="form-group">
                         <label>Password</label>
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             name="password"
                             placeholder="Enter your password"
                             value={formData.password}
                             onChange={handleChange}
                             required
                         />
-                        <FaLock className="input-icon" />
+                        <div 
+                            className="input-icon" 
+                            onClick={togglePasswordVisibility}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </div>
                     </div>
 
                     <div className="form-options">

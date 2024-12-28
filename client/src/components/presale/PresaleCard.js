@@ -58,6 +58,11 @@ const PresaleCard = () => {
         }
     };
 
+    const formatAddress = (address) => {
+        if (!address) return '';
+        return `${address.slice(0, 18)}...${address.slice(-8)}`;
+    };
+
     return (
         <div className="presale-card">
             <div className="presale-header">
@@ -143,13 +148,18 @@ const PresaleCard = () => {
             <div className="wallet-address">
                 <h3>Payment Address</h3>
                 <div className="address-display">
-                    <span className="address">{presaleData.walletAddresses[paymentMethod]}</span>
-                    <button 
-                        className={`copy-btn ${copied ? 'copied' : ''}`}
-                        onClick={handleCopyAddress}
-                    >
-                        {copied ? <FaCheck /> : <FaCopy />}
-                    </button>
+                    <div className="address-row">
+                        <span className="address" title={presaleData.walletAddresses[paymentMethod]}>
+                            {formatAddress(presaleData.walletAddresses[paymentMethod])}
+                        </span>
+                        <button 
+                            className={`copy-btn ${copied ? 'copied' : ''}`}
+                            onClick={handleCopyAddress}
+                            title={copied ? 'Copied!' : 'Copy address'}
+                        >
+                            {copied ? <FaCheck /> : <FaCopy />}
+                        </button>
+                    </div>
                 </div>
             </div>
 

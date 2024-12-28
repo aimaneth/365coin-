@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWeb3React } from '@web3-react/core';
 import { injected } from '../../utils/connectors';
-import { FaWallet, FaUser, FaEnvelope, FaCopy, FaCheck, FaExclamationCircle, FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaChartLine, FaExchangeAlt, FaClock, FaShoppingCart, FaRocket, FaCrown, FaGem, FaSync } from 'react-icons/fa';
+import { FaWallet, FaUser, FaEnvelope, FaCopy, FaCheck, FaExclamationCircle, FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaChartLine, FaExchangeAlt, FaClock, FaShoppingCart, FaRocket, FaCrown, FaGem, FaSync, FaCog } from 'react-icons/fa';
 import './Profile.css';
 import WalletGraph from './WalletGraph';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+    const navigate = useNavigate();
     const { user, connectWalletToAccount, disconnectWalletFromAccount } = useAuth();
     const { active, account, activate, deactivate } = useWeb3React();
     const [isConnecting, setIsConnecting] = useState(false);
@@ -70,37 +71,91 @@ const Profile = () => {
     const connectNewWallet = async () => {
         setIsConnecting(true);
         setError('');
+        console.log('Starting wallet connection process...');
         
         try {
+            // Check if MetaMask is installed
             if (!window.ethereum) {
+                console.error('MetaMask not found');
                 throw new Error('Please install MetaMask to connect your wallet');
             }
+            console.log('MetaMask detected');
 
-            // Request account access
+            // Check if user is logged in
+            if (!user) {
+                console.error('No user found - need to login first');
+                throw new Error('Please login to connect your wallet');
+            }
+            console.log('User authenticated:', user);
+
+            // Request all accounts to show account selection
+            console.log('Requesting all MetaMask accounts...');
+            const allAccounts = await window.ethereum.request({
+                method: 'wallet_getPermissions'
+            });
+            console.log('All available accounts:', allAccounts);
+
+            // Request specific account selection
+            console.log('Requesting account selection...');
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_requestPermissions',
+                    params: [{
+                        eth_accounts: {}
+                    }]
+                });
+            } catch (err) {
+                // If user cancels the permission request, try direct account request
+                console.log('Permission request cancelled, trying direct account request');
+            }
+
+            // Get the selected account
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
             });
+            console.log('MetaMask accounts received:', accounts);
 
-            // Get the first account
+            if (!accounts || accounts.length === 0) {
+                throw new Error('No accounts found in MetaMask. Please create or import an account.');
+            }
+
+            // Get the selected account
             const newAccount = accounts[0];
+            console.log('Selected account to connect:', newAccount);
+
+            // Check if this exact account is already connected
+            const isWalletConnected = user.walletAddresses?.some(
+                w => w.address.toLowerCase() === newAccount.toLowerCase()
+            );
+            
+            if (isWalletConnected) {
+                console.error('This specific account already connected:', newAccount);
+                throw new Error('This account is already connected. Please select a different account from MetaMask (you can use the MetaMask account switcher to select or create another account).');
+            }
+            console.log('Account is not yet connected, proceeding...');
 
             // Activate Web3React
+            console.log('Activating Web3React...');
             await activate(injected);
+            console.log('Web3React activated successfully');
 
             // Save wallet to user account through AuthContext
-            if (user && newAccount) {
-                try {
-                    await connectWalletToAccount(newAccount);
-                    console.log('Wallet connected and saved:', newAccount);
-                    setSelectedWallet(newAccount);
-                } catch (error) {
-                    console.error('Error saving wallet to account:', error);
-                    setError('Failed to save wallet to account');
-                }
+            console.log('Attempting to save wallet to account...');
+            const result = await connectWalletToAccount(newAccount);
+            console.log('Wallet connection result:', result);
+            
+            if (result && result.user) {
+                console.log('Wallet connected successfully:', newAccount);
+                setSelectedWallet(newAccount);
+            } else {
+                throw new Error('Failed to get confirmation of wallet connection');
             }
         } catch (error) {
-            console.error('Connection error:', error);
-            setError(error.message || 'Failed to connect wallet');
+            console.error('Wallet connection error:', error);
+            const errorMessage = error.message.includes('already connected') ? 
+                error.message + ' Click the MetaMask extension, then click the account icon at the top right to switch or add accounts.' :
+                error.message || 'Failed to connect wallet';
+            setError(errorMessage);
         } finally {
             setIsConnecting(false);
         }
@@ -202,188 +257,166 @@ const Profile = () => {
         };
     };
 
+    const handleSettingsClick = () => {
+        navigate('/settings', { state: { from: 'profile' } });
+    };
+
     return (
         <div className="profile-container">
-            {/* Profile Header */}
             <div className="profile-header">
                 <div className="profile-avatar">
-                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                    {user?.displayName?.[0] || user?.email?.[0] || <FaUser />}
                 </div>
                 <div className="profile-info">
-                    <h1>{user?.username}</h1>
-                    <p className="profile-email">
-                        <FaEnvelope /> {user?.email}
-                    </p>
+                    <h1>{user?.displayName || 'User'}</h1>
+                    <div className="profile-email">
+                        <FaEnvelope />
+                        {user?.email}
+                    </div>
                 </div>
+                <button 
+                    onClick={handleSettingsClick}
+                    className="settings-link" 
+                    title="Settings"
+                >
+                    <FaCog />
+                </button>
             </div>
 
             <div className="profile-grid">
-                {/* Brand Section */}
-                <div className="footer-brand">
-                    {/* ... existing brand content */}
-                </div>
-
-                {/* Wallets Management Card */}
                 <div className="profile-card wallets-card">
                     <h3>Your Wallets</h3>
                     <div className="wallets-list">
                         {user?.walletAddresses?.map((wallet) => (
-                            <div 
-                                key={wallet.address} 
+                            <div
+                                key={wallet.address}
                                 className={`wallet-item ${selectedWallet === wallet.address ? 'selected' : ''}`}
+                                onClick={() => switchWallet(wallet.address)}
                             >
-                                <div 
-                                    className="wallet-info"
-                                    onClick={() => switchWallet(wallet.address)}
-                                >
-                                    <FaWallet className="wallet-icon" />
+                                <div className="wallet-info">
+                                    <div className="wallet-icon">
+                                        <FaWallet />
+                                    </div>
                                     <div className="wallet-details">
-                                        <span className="wallet-address">
-                                            {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
-                                        </span>
-                                        <span className="wallet-network">{wallet.network}</span>
+                                        <div className="wallet-address">
+                                            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                                        </div>
+                                        <div className="wallet-network">BSC Network</div>
                                     </div>
                                 </div>
                                 <div className="wallet-actions">
                                     <button 
-                                        className="copy-btn"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             copyToClipboard(wallet.address);
-                                        }}
+                                        }} 
                                         title="Copy address"
+                                        aria-label="Copy wallet address"
                                     >
                                         {copied ? <FaCheck /> : <FaCopy />}
                                     </button>
                                     <button 
-                                        className="disconnect-btn"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             disconnectWallet(wallet.address);
-                                        }}
+                                        }} 
                                         title="Disconnect wallet"
+                                        aria-label="Disconnect wallet"
                                     >
                                         <FaTrash />
                                     </button>
                                 </div>
                             </div>
                         ))}
-                        <button 
-                            className="add-wallet-btn"
-                            onClick={connectNewWallet}
-                            disabled={isConnecting}
-                        >
-                            <FaPlus />
-                            {isConnecting ? 'Connecting...' : 'Add New Wallet'}
-                        </button>
                     </div>
+                    <button
+                        className="add-wallet-btn"
+                        onClick={connectNewWallet}
+                        disabled={isConnecting}
+                    >
+                        <FaPlus />
+                        {isConnecting ? 'Connecting...' : 'Add New Wallet'}
+                    </button>
+                    {error && (
+                        <div className="error-message">
+                            <FaExclamationCircle /> {error}
+                        </div>
+                    )}
                 </div>
 
-                {/* Selected Wallet Details */}
                 {selectedWallet && (
-                    <>
-                        <div className="profile-card wallet-details-card">
-                            <h3>Wallet Overview</h3>
-                            <div className="wallet-overview">
-                                <div className="balance-section">
-                                    <div className="total-balance">
-                                        <span className="label">Total Balance</span>
-                                        <span className="value">{getWalletData(selectedWallet).balanceUSD}</span>
-                                        <span className="token-balance">{getWalletData(selectedWallet).balance}</span>
-                                    </div>
-                                    <div className="profit-loss">
-                                        <span className={`value ${getWalletData(selectedWallet).profitLoss.isPositive ? 'positive' : 'negative'}`}>
-                                            {getWalletData(selectedWallet).profitLoss.percentage}
-                                            <span className="usd-value">{getWalletData(selectedWallet).profitLoss.usdValue}</span>
-                                        </span>
-                                    </div>
+                    <div className="profile-card wallet-details-card">
+                        <div className="wallet-overview">
+                            <div className="balance-section">
+                                <div className="total-balance">
+                                    <span className="label">Total Balance</span>
+                                    <span className="value">{getWalletData(selectedWallet).balanceUSD}</span>
+                                    <span className="token-balance">{getWalletData(selectedWallet).balance}</span>
                                 </div>
-                                
-                                <div className="wallet-actions-grid">
-                                    <button className="wallet-action-btn send">
-                                        <FaArrowUp className="action-icon" />
-                                        <span className="action-label">Send</span>
-                                    </button>
-                                    <button className="wallet-action-btn receive">
-                                        <FaArrowDown className="action-icon" />
-                                        <span className="action-label">Receive</span>
-                                    </button>
-                                    <button className="wallet-action-btn buy">
-                                        <FaShoppingCart className="action-icon" />
-                                        <span className="action-label">Buy</span>
-                                    </button>
-                                    <button className="wallet-action-btn sell">
-                                        <FaExchangeAlt className="action-icon" />
-                                        <span className="action-label">Sell</span>
-                                    </button>
-                                </div>
-
-                                <div className="stats-grid">
-                                    {['24h', '7d', '30d'].map((period) => (
-                                        <div key={period} className="stat-card">
-                                            <span className="period">{period}</span>
-                                            <span className={`change ${getWalletData(selectedWallet).stats[period].isPositive ? 'positive' : 'negative'}`}>
-                                                {getWalletData(selectedWallet).stats[period].change}
-                                            </span>
-                                            <span className="volume">Vol: {getWalletData(selectedWallet).stats[period].volume}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="wallet-graph-container">
-                                    <WalletGraph data={generateDummyGraphData('24h')} />
-                                </div>
-
-                                <div className="recent-activity">
-                                    <h4>Recent Activity</h4>
-                                    {getWalletData(selectedWallet).recentActivity.map((activity, index) => (
-                                        <div key={index} className="activity-item">
-                                            <div className="activity-type">
-                                                <FaExchangeAlt className={activity.type.toLowerCase()} />
-                                                <span>{activity.type}</span>
-                                            </div>
-                                            <div className="activity-details">
-                                                <span className="amount">{activity.amount}</span>
-                                                <span className="price">{activity.price}</span>
-                                            </div>
-                                            <div className="activity-time">
-                                                <FaClock />
-                                                <span>{activity.time}</span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="profit-loss">
+                                    <span className={`value ${getWalletData(selectedWallet).profitLoss.isPositive ? 'positive' : 'negative'}`}>
+                                        {getWalletData(selectedWallet).profitLoss.percentage}
+                                    </span>
+                                    <span className="usd-value">{getWalletData(selectedWallet).profitLoss.usdValue}</span>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="profile-card transactions-card">
-                            <h3>Transaction History</h3>
-                            <div className="transactions-list">
-                                {getWalletData(selectedWallet).transactions.map(tx => (
-                                    <div key={tx.id} className="transaction-item">
-                                        <div className="transaction-info">
-                                            <span className="transaction-type">{tx.type}</span>
-                                            <span className="transaction-amount">{tx.amount}</span>
+                            <div className="wallet-actions-grid">
+                                <button className="wallet-action-btn send">
+                                    <FaArrowUp className="action-icon" />
+                                    <span className="action-label">Send</span>
+                                </button>
+                                <button className="wallet-action-btn receive">
+                                    <FaArrowDown className="action-icon" />
+                                    <span className="action-label">Receive</span>
+                                </button>
+                                <button className="wallet-action-btn buy">
+                                    <FaShoppingCart className="action-icon" />
+                                    <span className="action-label">Buy</span>
+                                </button>
+                                <button className="wallet-action-btn sell">
+                                    <FaExchangeAlt className="action-icon" />
+                                    <span className="action-label">Sell</span>
+                                </button>
+                            </div>
+
+                            <div className="stats-grid">
+                                {['24h', '7d', '30d'].map((period) => (
+                                    <div key={period} className="stat-card">
+                                        <span className="period">{period}</span>
+                                        <span className={`change ${getWalletData(selectedWallet).stats[period].isPositive ? 'positive' : 'negative'}`}>
+                                            {getWalletData(selectedWallet).stats[period].change}
+                                        </span>
+                                        <span className="volume">Vol: {getWalletData(selectedWallet).stats[period].volume}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="wallet-graph-container">
+                                <WalletGraph data={generateDummyGraphData('24h')} />
+                            </div>
+
+                            <div className="recent-activity">
+                                <h4>Recent Activity</h4>
+                                {getWalletData(selectedWallet).recentActivity.map((activity, index) => (
+                                    <div key={index} className="activity-item">
+                                        <div className="activity-type">
+                                            <FaExchangeAlt className={activity.type.toLowerCase()} />
+                                            <span>{activity.type}</span>
                                         </div>
-                                        <div className="transaction-details">
-                                            <span className="transaction-date">{tx.date}</span>
-                                            <span className={`transaction-status ${tx.status.toLowerCase()}`}>
-                                                {tx.status}
-                                            </span>
-                                            <a 
-                                                href={`https://bscscan.com/tx/${tx.hash}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="transaction-hash"
-                                            >
-                                                View on BSCScan
-                                            </a>
+                                        <div className="activity-details">
+                                            <span className="amount">{activity.amount}</span>
+                                            <span className="price">{activity.price}</span>
+                                        </div>
+                                        <div className="activity-time">
+                                            <FaClock />
+                                            <span>{activity.time}</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         </div>

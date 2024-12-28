@@ -1,46 +1,63 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from '../utils/db.js';
+import { connectDB } from './utils/db.js';
 import authRoutes from './auth/routes.js';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
 const app = express();
 
-// CORS configuration
+// Security middleware
 app.use(cors({
-    origin: ['https://365-coin.vercel.app', 'http://localhost:3000'],
-    credentials: true
+  origin: ['http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 
-// Test route
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
-
-// Auth routes
+// Routes
 app.use('/api/auth', authRoutes);
+
+// Test database connection
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({ 
+      status: 'ok',
+      database: dbStatus,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error',
+      message: error.message 
+    });
+  }
+});
 
 // Error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something broke!' });
-});
-
-// Handle 404
-app.use((req, res) => {
-    console.log('404 for:', req.url);
-    res.status(404).json({ message: 'Not Found' });
+  console.error(err.stack);
+  res.status(500).json({ 
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 // Connect to MongoDB
-connectDB().then(() => {
+connectDB()
+  .then(() => {
     console.log('MongoDB Connected');
-}).catch(err => {
-    console.error('MongoDB Connection Error:', err);
-});
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch(err => {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+  });
 
 export default app; 

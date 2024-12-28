@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
     FaSearch, FaChartLine, FaExternalLinkAlt, FaFilter, 
     FaArrowUp, FaArrowDown, FaTrophy, FaUsers, FaChartArea,
-    FaWallet, FaTimes
+    FaWallet, FaTimes, FaMedal, FaCrown, FaStar
 } from 'react-icons/fa';
 import PerformanceGraph from './PerformanceGraph';
 import TradingGraph from './TradingGraph';
 import TradeHistory from './TradeHistory';
 import './PnL.css';
+import './TraderDetails.css';
 
 const PnL = () => {
     const [timeframe, setTimeframe] = useState('24h');
@@ -105,20 +106,18 @@ const PnL = () => {
 
     // Generate mock performance data when a trader is selected
     const generatePerformanceData = (trader) => {
-        const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const data = labels.map(() => Math.random() * 100 - 50); // Random values between -50 and 50
+        const currentTime = Math.floor(Date.now() / 1000);
+        const data = [];
+        
+        // Generate data points for the last 7 days
+        for (let i = 0; i < 7; i++) {
+            data.push({
+                time: currentTime - (6 - i) * 86400, // 86400 seconds in a day
+                value: Math.random() * 100 - 50 // Random values between -50 and 50
+            });
+        }
 
-        return {
-            labels,
-            datasets: [{
-                label: 'PnL %',
-                data,
-                borderColor: '#f0c000',
-                backgroundColor: 'rgba(240, 192, 0, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        };
+        return data;
     };
 
     const generateMockTrades = () => {
@@ -247,8 +246,21 @@ const PnL = () => {
                                     onClick={() => handleTraderSelect(trader)}
                                 >
                                     <div className="td rank">
+                                        {index < 3 ? (
+                                            <div className="rank-badge">
+                                                {index === 0 ? (
+                                                    <FaCrown style={{ color: '#FFD700' }} data-tooltip="Top Trader" />
+                                                ) : index === 1 ? (
+                                                    <FaMedal style={{ color: '#C0C0C0' }} data-tooltip="Runner Up" />
+                                                ) : (
+                                                    <FaMedal style={{ color: '#CD7F32' }} data-tooltip="Third Place" />
+                                                )}
+                                            </div>
+                                        ) : null}
                                         <span className="rank-number">#{index + 1}</span>
-                                        <span className="trader-avatar">{trader.avatar}</span>
+                                        <span className="trader-avatar" data-tooltip={`Trader Level ${Math.floor(Math.random() * 50) + 1}`}>
+                                            {trader.avatar}
+                                        </span>
                                     </div>
                                     <div className="td trader-info">
                                         <span className="trader-name">{trader.username}</span>
@@ -291,9 +303,9 @@ const PnL = () => {
                             <div className="trader-details-header">
                                 <div className="trader-profile">
                                     <div className="trader-avatar-large">{selectedTrader.avatar}</div>
-                                    <div className="trader-info">
-                                        <h2>{selectedTrader.username}</h2>
-                                        <div className="trader-address">
+                                    <div className="trader-info-large">
+                                        <h2 className="trader-name-large">{selectedTrader.username}</h2>
+                                        <div className="trader-address-large">
                                             <FaWallet />
                                             <span>{selectedTrader.address}</span>
                                             <button className="copy-btn">
@@ -311,36 +323,41 @@ const PnL = () => {
                             </div>
 
                             <div className="trader-stats-grid">
-                                <div className="stat-card">
+                                <div className="stat-card" data-tooltip="Total portfolio value including unrealized gains">
                                     <span className="stat-title">Total Value</span>
                                     <span className="stat-value">
                                         ${selectedTrader.stats[timeframe].totalValue.toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="stat-card">
+                                <div className="stat-card" data-tooltip="Profit/Loss for the selected timeframe">
                                     <span className="stat-title">PnL</span>
-                                    <span className="stat-value">
-                                        ${selectedTrader.stats[timeframe].pnl.toLocaleString()}
+                                    <span className={`stat-value ${selectedTrader.stats[timeframe].pnl >= 0 ? 'positive' : 'negative'}`}>
+                                        {selectedTrader.stats[timeframe].pnl >= 0 ? '+' : '-'}
+                                        ${Math.abs(selectedTrader.stats[timeframe].pnl).toLocaleString()}
+                                    </span>
+                                    <span className="stat-subtitle">
+                                        {selectedTrader.stats[timeframe].pnlPercentage}% {selectedTrader.stats[timeframe].pnlPercentage >= 0 ? '↑' : '↓'}
                                     </span>
                                 </div>
-                                <div className="stat-card">
+                                <div className="stat-card" data-tooltip="Percentage of profitable trades">
                                     <span className="stat-title">Win Rate</span>
                                     <span className="stat-value">
                                         {selectedTrader.stats[timeframe].winRate}%
+                                        <FaStar style={{ color: '#FFD700', marginLeft: '8px' }} />
                                     </span>
                                 </div>
-                                <div className="stat-card">
+                                <div className="stat-card" data-tooltip="Number of completed trades">
                                     <span className="stat-title">Total Trades</span>
                                     <span className="stat-value">
-                                        {selectedTrader.stats[timeframe].trades}
+                                        {selectedTrader.stats[timeframe].trades.toLocaleString()}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="trader-charts">
-                                <div className="chart-section">
-                                    <h3>Performance</h3>
-                                    <div className="graph-container">
+                                <div className="charts-row">
+                                    <div className="chart-container">
+                                        <h2 className="section-header">Performance</h2>
                                         {isLoading ? (
                                             <div className="graph-loading">
                                                 <div className="loading-spinner" />
@@ -352,11 +369,9 @@ const PnL = () => {
                                             />
                                         ) : null}
                                     </div>
-                                </div>
 
-                                <div className="chart-section">
-                                    <h3>Trading History</h3>
-                                    <div className="graph-container">
+                                    <div className="chart-container">
+                                        <h2 className="section-header">Trading History</h2>
                                         <TradingGraph 
                                             data={tradingData.candlesticks} 
                                             trades={tradingData.trades} 
@@ -365,27 +380,30 @@ const PnL = () => {
                                 </div>
                             </div>
 
-                            <TradeHistory trades={[
-                                {
-                                    time: Date.now() / 1000,
-                                    type: 'buy',
-                                    entryPrice: 35000,
-                                    exitPrice: 36500,
-                                    amount: '0.5 BTC',
-                                    pnl: 750,
-                                    roi: 4.28
-                                },
-                                {
-                                    time: (Date.now() - 86400000) / 1000,
-                                    type: 'sell',
-                                    entryPrice: 37000,
-                                    exitPrice: 35800,
-                                    amount: '0.3 BTC',
-                                    pnl: -360,
-                                    roi: -3.24
-                                },
-                                // Add more mock trades...
-                            ]} />
+                            <div className="trade-history-section">
+                                <h2 className="section-header">Trade History</h2>
+                                <TradeHistory trades={[
+                                    {
+                                        time: Date.now() / 1000,
+                                        type: 'buy',
+                                        entryPrice: 35000,
+                                        exitPrice: 36500,
+                                        amount: '0.5 BTC',
+                                        pnl: 750,
+                                        roi: 4.28
+                                    },
+                                    {
+                                        time: (Date.now() - 86400000) / 1000,
+                                        type: 'sell',
+                                        entryPrice: 37000,
+                                        exitPrice: 35800,
+                                        amount: '0.3 BTC',
+                                        pnl: -360,
+                                        roi: -3.24
+                                    },
+                                    // Add more mock trades...
+                                ]} />
+                            </div>
                         </>
                     )}
                 </div>

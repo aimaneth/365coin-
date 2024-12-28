@@ -22,6 +22,7 @@ import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
 import Disclaimer from './components/legal/Disclaimer';
 import Cookies from './components/legal/Cookies';
+import AuthTest from './components/auth/AuthTest';
 
 // Initialize Web3
 const getLibrary = (provider) => {
@@ -76,6 +77,7 @@ const AppContent = () => {
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/disclaimer" element={<Disclaimer />} />
                     <Route path="/cookies" element={<Cookies />} />
+                    <Route path="/auth-test" element={<AuthTest />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </div>

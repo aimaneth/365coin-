@@ -168,6 +168,7 @@
 
 .wallet-address {
     margin-bottom: 32px;
+    width: 100%;
 }
 
 .wallet-address h3 {
@@ -180,18 +181,30 @@
     background: rgba(255, 255, 255, 0.03);
     padding: 16px;
     border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.address-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
 }
 
 .address {
     font-family: monospace;
     color: var(--text);
     font-size: 14px;
-    word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
 }
 
 .copy-btn {
@@ -207,6 +220,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
 }
 
 .copy-btn.copied {

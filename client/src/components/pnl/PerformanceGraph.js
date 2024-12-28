@@ -1,147 +1,152 @@
+import { createChart } from 'lightweight-charts';
 import React, { useEffect, useRef } from 'react';
-import { Line } from 'react-chartjs-2';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-} from 'chart.js';
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-);
-
-const PerformanceGraph = ({ data, timeframe }) => {
+const PerformanceGraph = ({ data = [], timeframe }) => {
+    const chartContainerRef = useRef(null);
     const chartRef = useRef(null);
 
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            mode: 'index',
-            intersect: false,
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                enabled: true,
-                mode: 'index',
-                intersect: false,
-                padding: 12,
-                backgroundColor: 'rgba(30, 30, 30, 0.95)',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1,
-                titleColor: '#fff',
-                bodyColor: '#fff',
-                bodySpacing: 8,
-                titleSpacing: 8,
-                bodyFont: {
-                    size: 14
-                },
-                titleFont: {
-                    size: 14,
-                    weight: 'bold'
-                },
-                displayColors: false,
-                callbacks: {
-                    label: function(context) {
-                        return `${context.parsed.y.toFixed(2)}%`;
-                    }
-                }
-            }
-        },
-        scales: {
-            x: {
-                grid: {
-                    display: false,
-                    drawBorder: false
-                },
-                ticks: {
-                    color: '#B0B0B0',
-                    font: {
-                        size: 12
-                    },
-                    maxRotation: 0,
-                    maxTicksLimit: 8
-                }
-            },
-            y: {
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
-                    drawBorder: false
-                },
-                ticks: {
-                    color: '#B0B0B0',
-                    font: {
-                        size: 12
-                    },
-                    callback: function(value) {
-                        return value + '%';
-                    }
-                }
-            }
-        },
-        elements: {
-            line: {
-                tension: 0.4,
-                borderWidth: 2,
-                borderColor: '#f0c000',
-                fill: true,
-                backgroundColor: (context) => {
-                    if (!chartRef.current) return 'rgba(240, 192, 0, 0.1)';
-                    const ctx = chartRef.current.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                    gradient.addColorStop(0, 'rgba(240, 192, 0, 0.2)');
-                    gradient.addColorStop(1, 'rgba(240, 192, 0, 0)');
-                    return gradient;
-                }
-            },
-            point: {
-                radius: 0,
-                hoverRadius: 6,
-                backgroundColor: '#f0c000',
-                borderColor: '#fff',
-                borderWidth: 2,
-                hitRadius: 6
-            }
-        }
+    const getChartHeight = () => {
+        if (window.innerWidth <= 480) return 180;
+        if (window.innerWidth <= 768) return 200;
+        if (window.innerWidth <= 1200) return 220;
+        return 240;
     };
 
-    // Handle resize
     useEffect(() => {
-        const handleResize = () => {
-            if (chartRef.current) {
-                chartRef.current.resize();
-            }
-        };
+        if (!chartContainerRef.current || !Array.isArray(data) || data.length === 0) return;
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+        const chartHeight = getChartHeight();
+        const containerWidth = chartContainerRef.current.clientWidth;
+
+        // Create chart with responsive height
+        const chart = createChart(chartContainerRef.current, {
+            width: containerWidth,
+            height: chartHeight,
+            layout: {
+                background: { type: 'solid', color: 'transparent' },
+                textColor: '#B0B0B0',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 12,
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.03)' }
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                scaleMargins: {
+                    top: 0.2,
+                    bottom: 0.2,
+                },
+                ticksVisible: false,
+                borderVisible: false,
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                timeVisible: true,
+                secondsVisible: false,
+                ticksVisible: false,
+                borderVisible: false,
+                fixLeftEdge: true,
+                fixRightEdge: true,
+            },
+            handleScale: {
+                mouseWheel: false,
+                pinch: false,
+                axisPressedMouseMove: {
+                    time: true,
+                    price: false
+                },
+            },
+        });
+
+        try {
+            // Transform data if needed
+            const transformedData = data.map(item => ({
+                time: typeof item.time === 'number' ? item.time : Math.floor(new Date(item.time).getTime() / 1000),
+                value: typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0
+            }));
+
+            // Validate data structure
+            const validData = transformedData.filter(item => (
+                item &&
+                typeof item.time === 'number' &&
+                typeof item.value === 'number' &&
+                !isNaN(item.time) &&
+                !isNaN(item.value)
+            ));
+
+            if (validData.length === 0) {
+                console.warn('No valid data points for performance chart');
+                return;
+            }
+
+            // Sort data by time
+            validData.sort((a, b) => a.time - b.time);
+
+            // Add area series
+            const areaSeries = chart.addAreaSeries({
+                lineColor: '#f0c000',
+                topColor: 'rgba(240, 192, 0, 0.2)',
+                bottomColor: 'rgba(240, 192, 0, 0.0)',
+                lineWidth: 2,
+                priceFormat: {
+                    type: 'price',
+                    precision: 2,
+                    minMove: 0.01,
+                },
+            });
+
+            // Set data
+            areaSeries.setData(validData);
+
+            // Fit content
+            chart.timeScale().fitContent();
+
+            // Handle resize
+            const handleResize = () => {
+                if (chartContainerRef.current) {
+                    const newHeight = getChartHeight();
+                    const newWidth = chartContainerRef.current.clientWidth;
+                    
+                    chart.applyOptions({
+                        width: newWidth,
+                        height: newHeight
+                    });
+                    
+                    chart.timeScale().fitContent();
+                }
+            };
+
+            // Add resize listener
+            const resizeObserver = new ResizeObserver(handleResize);
+            resizeObserver.observe(chartContainerRef.current);
+            window.addEventListener('resize', handleResize);
+
+            // Store chart reference
+            chartRef.current = chart;
+
+            return () => {
+                resizeObserver.disconnect();
+                window.removeEventListener('resize', handleResize);
+                chart.remove();
+            };
+        } catch (error) {
+            console.error('Error setting up performance chart:', error);
+            return;
+        }
+    }, [data, timeframe]);
 
     return (
-        <div className="performance-graph">
-            <Line 
-                ref={chartRef}
-                data={data} 
-                options={options}
-                redraw={false}
-            />
-        </div>
+        <div 
+            ref={chartContainerRef} 
+            style={{ 
+                width: '100%',
+                height: `${getChartHeight()}px`,
+                position: 'relative',
+                overflow: 'hidden'
+            }}
+        />
     );
 };
 
