@@ -1,6 +1,17 @@
 # 365Coin Platform
 
-A modern and secure cryptocurrency platform built with React, featuring presale functionality, wallet management, and real-time transaction tracking.
+> This is a commissioned project developed for a client's cryptocurrency platform requirements.
+
+A modern and secure cryptocurrency platform built with React, featuring presale functionality, wallet management, and real-time transaction tracking. The platform was developed as a custom solution to meet specific client requirements for their ICO launch.
+
+## Project Overview
+
+This platform was commissioned to provide:
+- A seamless token presale experience
+- Multiple cryptocurrency payment options
+- Real-time tracking and monitoring
+- Secure wallet management
+- Professional and responsive user interface
 
 ## Features
 
@@ -75,6 +86,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Name - [@aimaneth](https://github.com/aimaneth)
+**Developer**: [@aimaneth](https://github.com/aimaneth)  
+For business inquiries or commissioned work, please reach out via GitHub.
 
 Project Link: [https://github.com/aimaneth/365coin-](https://github.com/aimaneth/365coin-)
