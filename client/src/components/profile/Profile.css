@@ -187,6 +187,20 @@
         max-width: 100% !important;
     }
 
+    /* Reorder cards on mobile */
+    .profile-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wallet-details-card {
+        order: -1; /* Move to top */
+    }
+
+    .wallets-card {
+        order: 1;
+    }
+
     .wallet-overview {
         width: 100% !important;
         overflow: hidden !important;
