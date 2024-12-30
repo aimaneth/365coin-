@@ -14,6 +14,7 @@ import Home from './components/Home';
 import Profile from './components/profile/Profile';
 import Settings from './components/settings/Settings';
 import PnL from './components/pnl/PnL';
+import Dashboard from './components/dashboard/Dashboard';
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
@@ -22,7 +23,22 @@ import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
 import Disclaimer from './components/legal/Disclaimer';
 import Cookies from './components/legal/Cookies';
-import AuthTest from './components/auth/AuthTest';
+
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+    const { currentUser, loading } = useAuth();
+    const location = useLocation();
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!currentUser) {
+        return <Navigate to="/" state={{ from: location }} replace />;
+    }
+
+    return children;
+};
 
 // Initialize Web3
 const getLibrary = (provider) => {
@@ -34,7 +50,7 @@ const getLibrary = (provider) => {
 const AppContent = () => {
     const location = useLocation();
     const { active } = useWeb3React();
-    const { user } = useAuth();
+    const { currentUser } = useAuth();
     const isDashboard = location.pathname === '/dashboard';
     const navigation = React.useContext(UNSAFE_NavigationContext).navigator;
 
@@ -66,18 +82,33 @@ const AppContent = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/pnl" element={<PnL />} />
                     <Route 
+                        path="/dashboard" 
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        } 
+                    />
+                    <Route 
                         path="/profile" 
-                        element={user ? <Profile /> : <Navigate to="/" replace />} 
+                        element={
+                            <ProtectedRoute>
+                                <Profile />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route 
                         path="/settings" 
-                        element={user ? <Settings /> : <Navigate to="/" replace />} 
+                        element={
+                            <ProtectedRoute>
+                                <Settings />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/disclaimer" element={<Disclaimer />} />
                     <Route path="/cookies" element={<Cookies />} />
-                    <Route path="/auth-test" element={<AuthTest />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </div>
@@ -88,13 +119,13 @@ const AppContent = () => {
 
 function App() {
     return (
-        <AuthProvider>
-            <Web3ReactProvider getLibrary={getLibrary}>
-                <Router future={{ v7_startTransition: true }}>
+        <Router future={{ v7_startTransition: true }}>
+            <AuthProvider>
+                <Web3ReactProvider getLibrary={getLibrary}>
                     <AppContent />
-                </Router>
-            </Web3ReactProvider>
-        </AuthProvider>
+                </Web3ReactProvider>
+            </AuthProvider>
+        </Router>
     );
 }
 

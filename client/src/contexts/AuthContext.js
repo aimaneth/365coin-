@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -12,27 +13,45 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [walletLoading, setWalletLoading] = useState(false);
+    const navigate = useNavigate();
 
     const API_URL = 'https://three65coin-backend.onrender.com';
 
+    // Set up axios interceptor for token
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            fetchCurrentUser(token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            fetchCurrentUser();
         } else {
             setLoading(false);
         }
-    }, []);
 
-    const fetchCurrentUser = async (token) => {
+        // Axios response interceptor for handling 401 errors
+        const interceptor = axios.interceptors.response.use(
+            response => response,
+            error => {
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    delete axios.defaults.headers.common['Authorization'];
+                    setCurrentUser(null);
+                    navigate('/');
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => axios.interceptors.response.eject(interceptor);
+    }, [navigate]);
+
+    const fetchCurrentUser = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/auth/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await axios.get(`${API_URL}/api/auth/me`);
             setCurrentUser(response.data);
         } catch (error) {
             console.error('Error fetching user:', error);
             localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
         } finally {
             setLoading(false);
         }
@@ -51,7 +70,9 @@ export function AuthProvider({ children }) {
 
             const { token, user } = response.data;
             localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
+            navigate('/dashboard');
             return { success: true };
         } catch (error) {
             console.error('Signup error:', error.response?.data || error.message);
@@ -74,7 +95,9 @@ export function AuthProvider({ children }) {
 
             const { token, user } = response.data;
             localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
+            navigate('/dashboard');
             return { success: true };
         } catch (error) {
             console.error('Login error:', error.response?.data || error.message);
@@ -89,15 +112,15 @@ export function AuthProvider({ children }) {
         try {
             const token = localStorage.getItem('token');
             if (token) {
-                await axios.post(`${API_URL}/api/auth/logout`, null, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await axios.post(`${API_URL}/api/auth/logout`);
             }
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
             localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
             setCurrentUser(null);
+            navigate('/');
         }
     };
 
@@ -106,11 +129,9 @@ export function AuthProvider({ children }) {
             setWalletLoading(true);
             setError('');
 
-            const token = localStorage.getItem('token');
             const response = await axios.post(
                 `${API_URL}/api/auth/connect-wallet`,
-                { walletAddress },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { walletAddress }
             );
 
             setCurrentUser(response.data.user);
@@ -129,11 +150,9 @@ export function AuthProvider({ children }) {
             setWalletLoading(true);
             setError('');
 
-            const token = localStorage.getItem('token');
             const response = await axios.post(
                 `${API_URL}/api/auth/disconnect-wallet`,
-                { walletAddress },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { walletAddress }
             );
 
             setCurrentUser(response.data.user);
