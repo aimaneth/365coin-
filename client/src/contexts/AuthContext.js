@@ -18,9 +18,8 @@ export function AuthProvider({ children }) {
     // Configure axios defaults
     useEffect(() => {
         axios.defaults.baseURL = API_URL;
-        axios.defaults.withCredentials = true;
         axios.defaults.headers.common['Content-Type'] = 'application/json';
-    }, []);
+    }, [API_URL]);
 
     useEffect(() => {
         // Check for token in localStorage
@@ -90,7 +89,7 @@ export function AuthProvider({ children }) {
         try {
             setWalletLoading(true);
             console.log('Connecting wallet:', walletAddress);
-            const response = await axios.post(`${API_URL}/api/auth/connect-wallet`, { walletAddress });
+            const response = await axios.post('/api/auth/connect-wallet', { walletAddress });
             console.log('Wallet connection response:', response.data);
             
             // Update the user state with the new wallet data
@@ -111,7 +110,7 @@ export function AuthProvider({ children }) {
     const disconnectWalletFromAccount = async (walletAddress) => {
         try {
             setWalletLoading(true);
-            const response = await axios.post(`${API_URL}/api/auth/disconnect-wallet`, { walletAddress });
+            const response = await axios.post('/api/auth/disconnect-wallet', { walletAddress });
             setCurrentUser(response.data.user); // Update user data without the wallet
             return response.data;
         } catch (error) {
@@ -126,7 +125,7 @@ export function AuthProvider({ children }) {
     const updateWalletName = async (walletAddress, newName) => {
         try {
             setWalletLoading(true);
-            const response = await axios.put(`${API_URL}/api/auth/wallet/update-name`, {
+            const response = await axios.put('/api/auth/wallet/update-name', {
                 walletAddress,
                 newName
             });
@@ -143,7 +142,7 @@ export function AuthProvider({ children }) {
     const getWalletBalance = async (walletAddress) => {
         try {
             setWalletLoading(true);
-            const response = await axios.get(`${API_URL}/api/auth/wallet/balance/${walletAddress}`);
+            const response = await axios.get(`/api/auth/wallet/balance/${walletAddress}`);
             return response.data.balance;
         } catch (error) {
             console.error('Wallet Balance Error:', error);
@@ -157,7 +156,7 @@ export function AuthProvider({ children }) {
         try {
             setWalletLoading(true);
             const response = await axios.get(
-                `${API_URL}/api/auth/wallet/transactions/${walletAddress}`,
+                `/api/auth/wallet/transactions/${walletAddress}`,
                 { params: { page, limit } }
             );
             return response.data;
@@ -172,7 +171,7 @@ export function AuthProvider({ children }) {
     const verifyWalletOwnership = async (walletAddress, message, signature) => {
         try {
             setWalletLoading(true);
-            const response = await axios.post(`${API_URL}/api/auth/wallet/verify-ownership`, {
+            const response = await axios.post('/api/auth/wallet/verify-ownership', {
                 walletAddress,
                 message,
                 signature

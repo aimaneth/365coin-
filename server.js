@@ -13,18 +13,33 @@ const corsOptions = {
     origin: [
         'http://localhost:3000',
         'https://365coin.netlify.app',
-        'https://three65coin.netlify.app',
-        /\.netlify\.app$/
+        'https://three65coin.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
+    credentials: false,
     optionsSuccessStatus: 200
 };
 
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
+
+// Pre-flight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Add headers middleware
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (corsOptions.origin.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
