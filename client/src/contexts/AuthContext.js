@@ -15,31 +15,6 @@ export function AuthProvider({ children }) {
     const [walletLoading, setWalletLoading] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            fetchCurrentUser();
-        } else {
-            setLoading(false);
-        }
-
-        const handleStorageChange = (e) => {
-            if (e.key === 'token' && e.newValue !== e.oldValue) {
-                if (!e.newValue) {
-                    setCurrentUser(null);
-                    delete api.defaults.headers.common['Authorization'];
-                } else {
-                    api.defaults.headers.common['Authorization'] = `Bearer ${e.newValue}`;
-                    fetchCurrentUser();
-                }
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
     const fetchCurrentUser = async () => {
         try {
             const response = await api.get('/api/auth/me');
@@ -63,21 +38,74 @@ export function AuthProvider({ children }) {
     };
 
     useEffect(() => {
+        const initializeAuth = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await fetchCurrentUser();
+            } else {
+                setLoading(false);
+            }
+        };
+
+        initializeAuth();
+    }, []);
+
+    useEffect(() => {
+        const handleStorageChange = async (e) => {
+            if (e.key === 'token' && e.newValue !== e.oldValue) {
+                if (!e.newValue) {
+                    setCurrentUser(null);
+                    delete api.defaults.headers.common['Authorization'];
+                } else {
+                    api.defaults.headers.common['Authorization'] = `Bearer ${e.newValue}`;
+                    await fetchCurrentUser();
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    useEffect(() => {
+        let refreshInterval;
+
         const refreshToken = async () => {
             try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
                 const response = await api.post('/api/auth/refresh');
                 if (response.data?.token) {
                     localStorage.setItem('token', response.data.token);
                     api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                    
+                    if (response.data.user) {
+                        setCurrentUser(response.data.user);
+                    }
                 }
             } catch (error) {
                 console.error('Token refresh error:', error);
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    localStorage.removeItem('token');
+                    delete api.defaults.headers.common['Authorization'];
+                    setCurrentUser(null);
+                }
             }
         };
 
-        const interval = setInterval(refreshToken, 15 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, []);
+        if (currentUser) {
+            refreshToken();
+            refreshInterval = setInterval(refreshToken, 14 * 60 * 1000);
+        }
+
+        return () => {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        };
+    }, [currentUser]);
 
     const signup = async (username, email, password) => {
         try {
