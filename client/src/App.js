@@ -14,7 +14,6 @@ import Home from './components/Home';
 import Profile from './components/profile/Profile';
 import Settings from './components/settings/Settings';
 import PnL from './components/pnl/PnL';
-import Dashboard from './components/dashboard/Dashboard';
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
@@ -51,7 +50,6 @@ const AppContent = () => {
     const location = useLocation();
     const { active } = useWeb3React();
     const { currentUser } = useAuth();
-    const isDashboard = location.pathname === '/dashboard';
     const navigation = React.useContext(UNSAFE_NavigationContext).navigator;
 
     // Use React.startTransition for route changes
@@ -76,19 +74,11 @@ const AppContent = () => {
 
     return (
         <div className="App">
-            {!isDashboard && <Navbar />}
+            <Navbar />
             <div className="container">
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/pnl" element={<PnL />} />
-                    <Route 
-                        path="/dashboard" 
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        } 
-                    />
                     <Route 
                         path="/profile" 
                         element={

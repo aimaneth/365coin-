@@ -404,6 +404,9 @@ body {
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
+    text-align: center;
+    -webkit-mask: none;
+    mask: none;
 }
 
 /* Use hardware acceleration for animations */

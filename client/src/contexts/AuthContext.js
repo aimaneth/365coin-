@@ -72,7 +72,6 @@ export function AuthProvider({ children }) {
             localStorage.setItem('token', token);
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
-            navigate('/dashboard');
             return { success: true };
         } catch (error) {
             console.error('Signup error:', error.response?.data || error.message);
@@ -97,7 +96,6 @@ export function AuthProvider({ children }) {
             localStorage.setItem('token', token);
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
-            navigate('/dashboard');
             return { success: true };
         } catch (error) {
             console.error('Login error:', error.response?.data || error.message);
