@@ -8,15 +8,33 @@ dotenv.config();
 
 const app = express();
 
-// Simple CORS middleware
-app.use(cors({
-    origin: ['https://365coin.netlify.app', 'http://localhost:3000'],
+// CORS configuration
+const corsOptions = {
+    origin: 'https://365coin.netlify.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204
+};
 
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+    res.sendStatus(204);
+});
+
+// Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`, {
+        headers: req.headers,
+        body: req.body
+    });
+    next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -28,7 +46,7 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Error:', err);
     res.status(500).json({ 
         message: 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
