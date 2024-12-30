@@ -12,9 +12,9 @@ const app = express();
 const corsOptions = {
     origin: [
         'http://localhost:3000',
-        'https://365coin.netlify.app',    // Add your Netlify domain
-        /\.netlify\.app$/,                // Allow all Netlify subdomains
-        /\.netlify\.live$/                // Allow Netlify deploy previews
+        'https://365coin.netlify.app',
+        /\.netlify\.app$/,
+        /\.netlify\.live$/
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -22,10 +22,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
-
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
