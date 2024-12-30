@@ -3,13 +3,14 @@ services:
     name: 365coin-backend
     env: node
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: npm start
     envVars:
       - key: MONGODB_URI
-        value: mongodb+srv://solidityanalyzerx:vex65535z@cluster0.fl2by.mongodb.net/
+        sync: false
       - key: JWT_SECRET
-        value: 245253d6629494e6cc260e46cea22024c0f8ec5d8a4c5ddca3cfb53ad17f0b74290c0d268bc17e58b4919620a31d4417667a41d1303d024675035b79bfcfac5c
+        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "10000" 
+        value: "10000"
+    healthCheckPath: /health 
