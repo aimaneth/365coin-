@@ -3,7 +3,8 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: process.env.REACT_APP_API_URL,
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
     withCredentials: true
 });
@@ -28,7 +29,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
-            window.location.href = '/login';
+            window.location.href = '/';
         }
         return Promise.reject(error);
     }

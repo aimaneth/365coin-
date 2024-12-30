@@ -10,18 +10,17 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-    origin: 'https://365coin.netlify.app',
+    origin: ['https://365coin.netlify.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
     optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options('*', (req, res) => {
-    res.sendStatus(204);
-});
+app.options('*', cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json());
