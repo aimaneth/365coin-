@@ -27,14 +27,29 @@ const Profile = () => {
         const connectOnLoad = async () => {
             if (window.ethereum && user) {
                 try {
+                    // First check if we're on BSC network
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    if (chainId !== '0x38') {
+                        setError('Please switch to Binance Smart Chain network');
+                        return;
+                    }
+
+                    // Then try to activate
                     await activate(injected);
+
+                    // Get current account
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    if (accounts && accounts.length > 0) {
+                        setSelectedWallet(accounts[0]);
+                    }
                 } catch (error) {
                     console.error('Failed to connect on load:', error);
+                    setError('Failed to connect wallet. Please try again.');
                 }
             }
         };
         connectOnLoad();
-    }, [user]);
+    }, [user, activate]);
 
     // Dummy data for each wallet
     const getWalletData = (address) => ({
@@ -105,7 +120,10 @@ const Profile = () => {
                 throw new Error('Please login to connect your wallet');
             }
 
-            // Request account access first
+            // First activate Web3React
+            await activate(injected, undefined, true);
+
+            // Then request account access
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
             });
@@ -117,13 +135,13 @@ const Profile = () => {
             // Get the selected account
             const newAccount = accounts[0];
 
-            // Check if this exact account is already connected
+            // Check if this exact account is already connected to this user
             const isWalletConnected = user.walletAddresses?.some(
                 w => w.address.toLowerCase() === newAccount.toLowerCase()
             );
             
             if (isWalletConnected) {
-                throw new Error('This account is already connected. Please select a different account from MetaMask.');
+                throw new Error('This wallet is already connected to your account. Please select a different wallet.');
             }
 
             // Then try to switch to BSC network
@@ -164,17 +182,18 @@ const Profile = () => {
                 throw new Error('Please make sure you are connected to Binance Smart Chain network');
             }
 
-            // Activate Web3React
-            await activate(injected, undefined, true);
-
             // Save wallet to user account through AuthContext
             const result = await connectWalletToAccount(newAccount);
             
-            if (result && result.user) {
+            if (result.success && result.user) {
                 setSelectedWallet(newAccount);
                 setSuccess('Wallet connected successfully');
             } else {
-                throw new Error('Failed to connect wallet to your account');
+                // Check if the error indicates the wallet is connected to another account
+                if (result.error?.includes('already connected') || result.error?.includes('belongs to another')) {
+                    throw new Error('This wallet is already connected to another account. Please use a different wallet.');
+                }
+                throw new Error(result.error || 'Failed to connect wallet to your account');
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
