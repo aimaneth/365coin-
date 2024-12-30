@@ -13,7 +13,14 @@ export function AuthProvider({ children }) {
     const [walletLoading, setWalletLoading] = useState(false);
 
     // Use environment variable for API URL
-    const API_URL = process.env.REACT_APP_API_URL || 'https://365coin-backend.onrender.com';
+    const API_URL = process.env.REACT_APP_API_URL || 'https://three65coin-backend.onrender.com';
+
+    // Configure axios defaults
+    useEffect(() => {
+        axios.defaults.baseURL = API_URL;
+        axios.defaults.withCredentials = true;
+        axios.defaults.headers.common['Content-Type'] = 'application/json';
+    }, []);
 
     useEffect(() => {
         // Check for token in localStorage
@@ -30,7 +37,7 @@ export function AuthProvider({ children }) {
 
     const verifyToken = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/auth/verify`);
+            const response = await axios.get('/api/auth/verify');
             setCurrentUser(response.data.user);
         } catch (error) {
             localStorage.removeItem('token');
@@ -42,7 +49,7 @@ export function AuthProvider({ children }) {
 
     const signup = async (email, password, username) => {
         try {
-            const response = await axios.post(`${API_URL}/api/auth/signup`, {
+            const response = await axios.post('/api/auth/signup', {
                 email,
                 password,
                 username
@@ -59,7 +66,7 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post(`${API_URL}/api/auth/login`, {
+            const response = await axios.post('/api/auth/login', {
                 email,
                 password
             });

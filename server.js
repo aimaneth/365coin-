@@ -13,8 +13,8 @@ const corsOptions = {
     origin: [
         'http://localhost:3000',
         'https://365coin.netlify.app',
-        /\.netlify\.app$/,
-        /\.netlify\.live$/
+        'https://three65coin.netlify.app',
+        /\.netlify\.app$/
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
