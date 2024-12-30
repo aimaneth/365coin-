@@ -7,7 +7,7 @@ import SignupModal from './auth/SignupModal';
 import './Navbar.css';
 
 const Navbar = () => {
-    const { user, logout } = useAuth();
+    const { currentUser: user, logout, loading } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
@@ -50,71 +50,73 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
-                <div className="navbar-container">
-                    <Link to="/" className="navbar-brand">
-                        <img src="/images/logo.png" alt="365 Coin" className="brand-logo" />
-                    </Link>
+            {!loading && (
+                <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
+                    <div className="navbar-container">
+                        <Link to="/" className="navbar-brand">
+                            <img src="/images/logo.png" alt="365 Coin" className="brand-logo" />
+                        </Link>
 
-                    <button 
-                        className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label="Toggle menu"
-                    >
-                        {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
-                    </button>
+                        <button 
+                            className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                        </button>
 
-                    <div className={`navbar-content ${isMobileMenuOpen ? 'active' : ''}`}>
-                        <div className="nav-links">
-                            <Link to="/" className="nav-link">Home</Link>
-                            <Link to="/pnl" className="nav-link">PnL</Link>
-                        </div>
+                        <div className={`navbar-content ${isMobileMenuOpen ? 'active' : ''}`}>
+                            <div className="nav-links">
+                                <Link to="/" className="nav-link">Home</Link>
+                                <Link to="/pnl" className="nav-link">PnL</Link>
+                            </div>
 
-                        <div className="auth-section">
-                            {user ? (
-                                <div className="user-menu" ref={dropdownRef}>
-                                    <button 
-                                        className="user-menu-btn"
-                                        onClick={() => setShowUserDropdown(!showUserDropdown)}
-                                    >
-                                        <div className="user-avatar">
-                                            {user.username[0].toUpperCase()}
+                            <div className="auth-section">
+                                {user ? (
+                                    <div className="user-menu" ref={dropdownRef}>
+                                        <button 
+                                            className="user-menu-btn"
+                                            onClick={() => setShowUserDropdown(!showUserDropdown)}
+                                        >
+                                            <div className="user-avatar">
+                                                {user.username[0].toUpperCase()}
+                                            </div>
+                                            <span className="username">{user.username}</span>
+                                        </button>
+
+                                        <div className={`dropdown-menu ${showUserDropdown ? 'active' : ''}`}>
+                                            <Link to="/profile" className="dropdown-item">
+                                                <FaUser /> Profile
+                                            </Link>
+                                            <Link to="/settings" className="dropdown-item">
+                                                <FaCog /> Settings
+                                            </Link>
+                                            <button onClick={handleLogout} className="dropdown-item">
+                                                <FaSignOutAlt /> Logout
+                                            </button>
                                         </div>
-                                        <span className="username">{user.username}</span>
-                                    </button>
-
-                                    <div className={`dropdown-menu ${showUserDropdown ? 'active' : ''}`}>
-                                        <Link to="/profile" className="dropdown-item">
-                                            <FaUser /> Profile
-                                        </Link>
-                                        <Link to="/settings" className="dropdown-item">
-                                            <FaCog /> Settings
-                                        </Link>
-                                        <button onClick={handleLogout} className="dropdown-item">
-                                            <FaSignOutAlt /> Logout
+                                    </div>
+                                ) : (
+                                    <div className="auth-buttons">
+                                        <button 
+                                            onClick={() => setShowLoginModal(true)} 
+                                            className="login-btn"
+                                        >
+                                            Login
+                                        </button>
+                                        <button 
+                                            onClick={() => setShowSignupModal(true)} 
+                                            className="signup-btn"
+                                        >
+                                            Sign Up
                                         </button>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="auth-buttons">
-                                    <button 
-                                        onClick={() => setShowLoginModal(true)} 
-                                        className="login-btn"
-                                    >
-                                        Login
-                                    </button>
-                                    <button 
-                                        onClick={() => setShowSignupModal(true)} 
-                                        className="signup-btn"
-                                    >
-                                        Sign Up
-                                    </button>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </nav>
+                </nav>
+            )}
 
             {showLoginModal && (
                 <LoginModal 

@@ -9,11 +9,17 @@ import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { user, connectWalletToAccount, disconnectWalletFromAccount } = useAuth();
+    const { 
+        currentUser: user, 
+        connectWalletToAccount, 
+        disconnectWalletFromAccount,
+        walletLoading 
+    } = useAuth();
     const { active, account, activate, deactivate } = useWeb3React();
     const [isConnecting, setIsConnecting] = useState(false);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [selectedWallet, setSelectedWallet] = useState(null);
 
     // Dummy data for each wallet
@@ -69,9 +75,10 @@ const Profile = () => {
     });
 
     const connectNewWallet = async () => {
+        if (walletLoading) return;
         setIsConnecting(true);
         setError('');
-        console.log('Starting wallet connection process...');
+        setSuccess('');
         
         try {
             // Check if MetaMask is installed
@@ -147,6 +154,7 @@ const Profile = () => {
             if (result && result.user) {
                 console.log('Wallet connected successfully:', newAccount);
                 setSelectedWallet(newAccount);
+                setSuccess('Wallet connected successfully');
             } else {
                 throw new Error('Failed to get confirmation of wallet connection');
             }
@@ -162,6 +170,10 @@ const Profile = () => {
     };
 
     const switchWallet = async (walletAddress) => {
+        if (walletLoading) return;
+        setError('');
+        setSuccess('');
+        
         try {
             // Disconnect current wallet if any
             if (active) {
@@ -204,9 +216,10 @@ const Profile = () => {
             setSelectedWallet(walletAddress);
             
             console.log('Switched to wallet:', walletAddress);
+            setSuccess('Wallet switched successfully');
         } catch (error) {
             console.error('Error switching wallet:', error);
-            setError('Failed to switch wallet');
+            setError(error.message || 'Failed to switch wallet');
         }
     };
 
@@ -217,6 +230,10 @@ const Profile = () => {
     };
 
     const disconnectWallet = async (walletAddress) => {
+        if (walletLoading) return;
+        setError('');
+        setSuccess('');
+        
         try {
             // If it's the currently connected wallet, disconnect from Web3
             if (active && account.toLowerCase() === walletAddress.toLowerCase()) {
@@ -230,9 +247,10 @@ const Profile = () => {
             if (selectedWallet === walletAddress) {
                 setSelectedWallet(null);
             }
+            setSuccess('Wallet disconnected successfully');
         } catch (error) {
             console.error('Error disconnecting wallet:', error);
-            setError('Failed to disconnect wallet');
+            setError(error.message || 'Failed to disconnect wallet');
         }
     };
 
@@ -286,62 +304,62 @@ const Profile = () => {
             <div className="profile-grid">
                 <div className="profile-card wallets-card">
                     <h3>Your Wallets</h3>
-                    <div className="wallets-list">
-                        {user?.walletAddresses?.map((wallet) => (
-                            <div
-                                key={wallet.address}
-                                className={`wallet-item ${selectedWallet === wallet.address ? 'selected' : ''}`}
-                                onClick={() => switchWallet(wallet.address)}
-                            >
-                                <div className="wallet-info">
-                                    <div className="wallet-icon">
-                                        <FaWallet />
-                                    </div>
-                                    <div className="wallet-details">
-                                        <div className="wallet-address">
-                                            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                    <div className="wallet-section">
+                        {error && <div className="error-message">{error}</div>}
+                        {success && <div className="success-message">{success}</div>}
+                        
+                        <button 
+                            onClick={connectNewWallet}
+                            disabled={isConnecting || walletLoading}
+                            className={`connect-wallet-btn ${isConnecting || walletLoading ? 'loading' : ''}`}
+                        >
+                            {isConnecting ? 'Connecting...' : 'Connect New Wallet'}
+                        </button>
+
+                        <div className="wallets-list">
+                            {user?.walletAddresses?.map((wallet) => (
+                                <div
+                                    key={wallet.address}
+                                    className={`wallet-item ${selectedWallet === wallet.address ? 'selected' : ''}`}
+                                    onClick={() => switchWallet(wallet.address)}
+                                >
+                                    <div className="wallet-info">
+                                        <div className="wallet-icon">
+                                            <FaWallet />
                                         </div>
-                                        <div className="wallet-network">BSC Network</div>
+                                        <div className="wallet-details">
+                                            <div className="wallet-address">
+                                                {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                                            </div>
+                                            <div className="wallet-network">BSC Network</div>
+                                        </div>
+                                    </div>
+                                    <div className="wallet-actions">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                copyToClipboard(wallet.address);
+                                            }} 
+                                            title="Copy address"
+                                            aria-label="Copy wallet address"
+                                        >
+                                            {copied ? <FaCheck /> : <FaCopy />}
+                                        </button>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                disconnectWallet(wallet.address);
+                                            }} 
+                                            title="Disconnect wallet"
+                                            aria-label="Disconnect wallet"
+                                        >
+                                            <FaTrash />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="wallet-actions">
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            copyToClipboard(wallet.address);
-                                        }} 
-                                        title="Copy address"
-                                        aria-label="Copy wallet address"
-                                    >
-                                        {copied ? <FaCheck /> : <FaCopy />}
-                                    </button>
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            disconnectWallet(wallet.address);
-                                        }} 
-                                        title="Disconnect wallet"
-                                        aria-label="Disconnect wallet"
-                                    >
-                                        <FaTrash />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <button
-                        className="add-wallet-btn"
-                        onClick={connectNewWallet}
-                        disabled={isConnecting}
-                    >
-                        <FaPlus />
-                        {isConnecting ? 'Connecting...' : 'Add New Wallet'}
-                    </button>
-                    {error && (
-                        <div className="error-message">
-                            <FaExclamationCircle /> {error}
+                            ))}
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {selectedWallet && (

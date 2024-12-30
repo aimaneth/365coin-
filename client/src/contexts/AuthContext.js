@@ -1,108 +1,94 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
 
+export function useAuth() {
+    return useContext(AuthContext);
+}
+
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [walletLoading, setWalletLoading] = useState(false);
 
-    // Check token and restore session on mount
+    // Use environment variable for API URL
+    const API_URL = process.env.REACT_APP_API_URL || 'https://365coin-backend.onrender.com';
+
     useEffect(() => {
-        const initializeAuth = async () => {
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                try {
-                    // Set default axios header
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-                    
-                    // Verify token and get user data
-                    const response = await axios.get('/api/auth/me');
-                    setUser(response.data);
-                    setToken(storedToken);
-                } catch (error) {
-                    console.error('Session restoration failed:', error);
-                    // If token is invalid, clear everything
-                    localStorage.removeItem('token');
-                    delete axios.defaults.headers.common['Authorization'];
-                    setUser(null);
-                    setToken(null);
-                }
-            }
+        // Check for token in localStorage
+        const token = localStorage.getItem('token');
+        if (token) {
+            // Set axios default header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            // Verify token and get user data
+            verifyToken();
+        } else {
             setLoading(false);
-        };
-
-        initializeAuth();
+        }
     }, []);
 
-    // Add axios default header when token exists
-    useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
+    const verifyToken = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/api/auth/verify`);
+            setCurrentUser(response.data.user);
+        } catch (error) {
+            localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
+        } finally {
+            setLoading(false);
         }
-    }, [token]);
+    };
 
     const signup = async (email, password, username) => {
         try {
-            const response = await axios.post('/api/auth/signup', {
+            const response = await axios.post(`${API_URL}/api/auth/signup`, {
                 email,
                 password,
                 username
             });
-            setUser(response.data.user);
-            setToken(response.data.token);
-            localStorage.setItem('token', response.data.token);
-            return response.data;
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setCurrentUser(user);
+            return user;
         } catch (error) {
-            console.error('Signup Error:', error);
-            throw error.response?.data?.message || 'Signup failed';
+            throw error.response?.data?.message || 'Failed to create account';
         }
     };
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('/api/auth/login', {
+            const response = await axios.post(`${API_URL}/api/auth/login`, {
                 email,
                 password
             });
-            setUser(response.data.user);
-            setToken(response.data.token);
-            localStorage.setItem('token', response.data.token);
-            return response.data;
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setCurrentUser(user);
+            return user;
         } catch (error) {
-            console.error('Login Error:', error);
-            throw error.response?.data?.message || 'Login failed';
+            throw error.response?.data?.message || 'Failed to log in';
         }
     };
 
-    const logout = async () => {
-        try {
-            if (token) {
-                await axios.post('/api/auth/logout');
-            }
-        } catch (error) {
-            console.error('Logout Error:', error);
-        } finally {
-            setUser(null);
-            setToken(null);
-            localStorage.removeItem('token');
-            delete axios.defaults.headers.common['Authorization'];
-            window.location.href = '/';
-        }
+    const logout = () => {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        setCurrentUser(null);
     };
 
     const connectWalletToAccount = async (walletAddress) => {
         try {
+            setWalletLoading(true);
             console.log('Connecting wallet:', walletAddress);
-            const response = await axios.post('/api/auth/connect-wallet', { walletAddress });
+            const response = await axios.post(`${API_URL}/api/auth/connect-wallet`, { walletAddress });
             console.log('Wallet connection response:', response.data);
             
             // Update the user state with the new wallet data
             if (response.data.user) {
-                setUser(response.data.user);
+                setCurrentUser(response.data.user);
                 return response.data;
             } else {
                 throw new Error('Invalid response from server');
@@ -110,42 +96,107 @@ export function AuthProvider({ children }) {
         } catch (error) {
             console.error('Wallet Connection Error:', error.response?.data || error);
             throw error.response?.data?.message || error.message || 'Failed to connect wallet';
+        } finally {
+            setWalletLoading(false);
         }
     };
 
     const disconnectWalletFromAccount = async (walletAddress) => {
         try {
-            const response = await axios.post('/api/auth/disconnect-wallet', { walletAddress });
-            setUser(response.data.user); // Update user data without the wallet
+            setWalletLoading(true);
+            const response = await axios.post(`${API_URL}/api/auth/disconnect-wallet`, { walletAddress });
+            setCurrentUser(response.data.user); // Update user data without the wallet
             return response.data;
         } catch (error) {
             console.error('Wallet Disconnection Error:', error);
             throw error.response?.data?.message || 'Failed to disconnect wallet';
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
+    // New wallet-related functions
+    const updateWalletName = async (walletAddress, newName) => {
+        try {
+            setWalletLoading(true);
+            const response = await axios.put(`${API_URL}/api/auth/wallet/update-name`, {
+                walletAddress,
+                newName
+            });
+            setCurrentUser(response.data.user);
+            return response.data;
+        } catch (error) {
+            console.error('Wallet Name Update Error:', error);
+            throw error.response?.data?.message || 'Failed to update wallet name';
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
+    const getWalletBalance = async (walletAddress) => {
+        try {
+            setWalletLoading(true);
+            const response = await axios.get(`${API_URL}/api/auth/wallet/balance/${walletAddress}`);
+            return response.data.balance;
+        } catch (error) {
+            console.error('Wallet Balance Error:', error);
+            throw error.response?.data?.message || 'Failed to fetch wallet balance';
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
+    const getWalletTransactions = async (walletAddress, page = 1, limit = 10) => {
+        try {
+            setWalletLoading(true);
+            const response = await axios.get(
+                `${API_URL}/api/auth/wallet/transactions/${walletAddress}`,
+                { params: { page, limit } }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Wallet Transactions Error:', error);
+            throw error.response?.data?.message || 'Failed to fetch wallet transactions';
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
+    const verifyWalletOwnership = async (walletAddress, message, signature) => {
+        try {
+            setWalletLoading(true);
+            const response = await axios.post(`${API_URL}/api/auth/wallet/verify-ownership`, {
+                walletAddress,
+                message,
+                signature
+            });
+            return response.data.isValid;
+        } catch (error) {
+            console.error('Wallet Verification Error:', error);
+            throw error.response?.data?.message || 'Failed to verify wallet ownership';
+        } finally {
+            setWalletLoading(false);
         }
     };
 
     const value = {
-        user,
-        token,
-        loading,
+        currentUser,
         signup,
         login,
         logout,
+        loading,
+        walletLoading,
         connectWalletToAccount,
-        disconnectWalletFromAccount
+        disconnectWalletFromAccount,
+        updateWalletName,
+        getWalletBalance,
+        getWalletTransactions,
+        verifyWalletOwnership
     };
-
-    if (loading) {
-        return <div className="loading-spinner" />;
-    }
 
     return (
         <AuthContext.Provider value={value}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth() {
-    return useContext(AuthContext);
 } 

@@ -9,12 +9,19 @@ const Settings = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const fromProfile = location.state?.from === 'profile';
-    const { user, disconnectWalletFromAccount, updateProfile, updatePassword } = useAuth();
+    const { 
+        currentUser: user, 
+        disconnectWalletFromAccount, 
+        updateProfile, 
+        updatePassword,
+        walletLoading 
+    } = useAuth();
     const { active, account, deactivate } = useWeb3React();
     const [disconnecting, setDisconnecting] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [walletError, setWalletError] = useState('');
     const [success, setSuccess] = useState('');
     const [profileData, setProfileData] = useState({
         displayName: user?.displayName || '',
@@ -95,14 +102,17 @@ const Settings = () => {
     const handleDisconnectWallet = async (walletAddress) => {
         try {
             setDisconnecting(walletAddress);
+            setWalletError('');
             
             if (active && account?.toLowerCase() === walletAddress.toLowerCase()) {
                 await deactivate();
             }
 
             await disconnectWalletFromAccount(walletAddress);
+            setSuccess('Wallet disconnected successfully');
         } catch (error) {
             console.error('Error disconnecting wallet:', error);
+            setWalletError(error.message || 'Failed to disconnect wallet');
         } finally {
             setDisconnecting(null);
         }
@@ -407,9 +417,11 @@ const Settings = () => {
                         </div>
                     </div>
 
-                    <div className="connected-wallets-list">
+                    {walletError && <div className="error-message">{walletError}</div>}
+
+                    <div className="wallet-list">
                         {user?.walletAddresses?.map((wallet) => (
-                            <div key={wallet.address} className="wallet-item">
+                            <div key={wallet.address} className="wallet-details">
                                 <div className="wallet-info">
                                     <div className="wallet-icon">
                                         <FaWallet />
@@ -436,21 +448,11 @@ const Settings = () => {
                                     </div>
                                 </div>
                                 <button
-                                    className="disconnect-wallet-btn"
                                     onClick={() => handleDisconnectWallet(wallet.address)}
-                                    disabled={disconnecting === wallet.address}
+                                    className={`disconnect-btn ${walletLoading || disconnecting === wallet.address ? 'loading' : ''}`}
+                                    disabled={walletLoading || disconnecting === wallet.address}
                                 >
-                                    {disconnecting === wallet.address ? (
-                                        <>
-                                            <FaCheck />
-                                            Disconnecting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FaTrash />
-                                            Disconnect
-                                        </>
-                                    )}
+                                    {disconnecting === wallet.address ? 'Disconnecting...' : 'Disconnect'}
                                 </button>
                             </div>
                         ))}
