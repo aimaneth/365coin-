@@ -210,6 +210,9 @@
 .presale-wrapper {
     flex: 1;
     max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 }
 
 @media (max-width: 1400px) {
