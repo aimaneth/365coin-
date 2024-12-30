@@ -15,61 +15,72 @@ export function AuthProvider({ children }) {
     const [walletLoading, setWalletLoading] = useState(false);
     const navigate = useNavigate();
 
-    const fetchCurrentUser = async () => {
-        try {
-            const response = await api.get('/api/auth/me');
-            if (response.data) {
-                setCurrentUser(response.data);
-            } else {
-                localStorage.removeItem('token');
-                delete api.defaults.headers.common['Authorization'];
-                setCurrentUser(null);
-            }
-        } catch (error) {
-            console.error('Error fetching user:', error);
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                localStorage.removeItem('token');
-                delete api.defaults.headers.common['Authorization'];
-                setCurrentUser(null);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Initialize auth state
     useEffect(() => {
         const initializeAuth = async () => {
             const token = localStorage.getItem('token');
             if (token) {
                 api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                await fetchCurrentUser();
-            } else {
-                setLoading(false);
+                try {
+                    const response = await api.get('/api/auth/me');
+                    if (response.data) {
+                        setCurrentUser(response.data);
+                    }
+                } catch (error) {
+                    // Only clear on auth errors
+                    if (error.response?.status === 401 || error.response?.status === 403) {
+                        localStorage.removeItem('token');
+                        delete api.defaults.headers.common['Authorization'];
+                        setCurrentUser(null);
+                    }
+                    // For other errors, keep the token and retry later
+                }
             }
+            setLoading(false);
         };
 
         initializeAuth();
     }, []);
 
+    // Add retry mechanism for failed auth checks
     useEffect(() => {
-        const handleStorageChange = async (e) => {
-            if (e.key === 'token' && e.newValue !== e.oldValue) {
-                if (!e.newValue) {
-                    setCurrentUser(null);
-                    delete api.defaults.headers.common['Authorization'];
-                } else {
-                    api.defaults.headers.common['Authorization'] = `Bearer ${e.newValue}`;
-                    await fetchCurrentUser();
+        let retryTimeout;
+        const retryAuth = async () => {
+            const token = localStorage.getItem('token');
+            if (token && !currentUser) {
+                try {
+                    const response = await api.get('/api/auth/me');
+                    if (response.data) {
+                        setCurrentUser(response.data);
+                    }
+                } catch (error) {
+                    if (error.response?.status === 401 || error.response?.status === 403) {
+                        localStorage.removeItem('token');
+                        delete api.defaults.headers.common['Authorization'];
+                        setCurrentUser(null);
+                    } else {
+                        // Retry after 5 seconds for non-auth errors
+                        retryTimeout = setTimeout(retryAuth, 5000);
+                    }
                 }
             }
         };
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+        if (!currentUser && localStorage.getItem('token')) {
+            retryTimeout = setTimeout(retryAuth, 5000);
+        }
 
+        return () => {
+            if (retryTimeout) {
+                clearTimeout(retryTimeout);
+            }
+        };
+    }, [currentUser]);
+
+    // Token refresh mechanism
     useEffect(() => {
         let refreshInterval;
+        let refreshTimeout;
 
         const refreshToken = async () => {
             try {
@@ -80,30 +91,34 @@ export function AuthProvider({ children }) {
                 if (response.data?.token) {
                     localStorage.setItem('token', response.data.token);
                     api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                    
                     if (response.data.user) {
                         setCurrentUser(response.data.user);
                     }
                 }
             } catch (error) {
                 console.error('Token refresh error:', error);
+                // Only clear on auth errors
                 if (error.response?.status === 401 || error.response?.status === 403) {
                     localStorage.removeItem('token');
                     delete api.defaults.headers.common['Authorization'];
                     setCurrentUser(null);
+                } else {
+                    // Retry after 5 seconds for non-auth errors
+                    refreshTimeout = setTimeout(refreshToken, 5000);
                 }
             }
         };
 
         if (currentUser) {
+            // Initial refresh
             refreshToken();
+            // Set up interval for subsequent refreshes (every 14 minutes)
             refreshInterval = setInterval(refreshToken, 14 * 60 * 1000);
         }
 
         return () => {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
+            if (refreshInterval) clearInterval(refreshInterval);
+            if (refreshTimeout) clearTimeout(refreshTimeout);
         };
     }, [currentUser]);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWeb3React } from '@web3-react/core';
 import { injected } from '../../utils/connectors';
@@ -21,6 +21,20 @@ const Profile = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [selectedWallet, setSelectedWallet] = useState(null);
+
+    // Add this effect to handle initial connection
+    useEffect(() => {
+        const connectOnLoad = async () => {
+            if (window.ethereum && user) {
+                try {
+                    await activate(injected);
+                } catch (error) {
+                    console.error('Failed to connect on load:', error);
+                }
+            }
+        };
+        connectOnLoad();
+    }, [user]);
 
     // Dummy data for each wallet
     const getWalletData = (address) => ({
@@ -91,7 +105,28 @@ const Profile = () => {
                 throw new Error('Please login to connect your wallet');
             }
 
-            // First try to switch to BSC network
+            // Request account access first
+            const accounts = await window.ethereum.request({ 
+                method: 'eth_requestAccounts' 
+            });
+
+            if (!accounts || accounts.length === 0) {
+                throw new Error('No accounts found in MetaMask. Please create or import an account.');
+            }
+
+            // Get the selected account
+            const newAccount = accounts[0];
+
+            // Check if this exact account is already connected
+            const isWalletConnected = user.walletAddresses?.some(
+                w => w.address.toLowerCase() === newAccount.toLowerCase()
+            );
+            
+            if (isWalletConnected) {
+                throw new Error('This account is already connected. Please select a different account from MetaMask.');
+            }
+
+            // Then try to switch to BSC network
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
@@ -116,62 +151,30 @@ const Profile = () => {
                             }]
                         });
                     } catch (addError) {
-                        setError('Please add Binance Smart Chain network to your wallet');
-                        setIsConnecting(false);
-                        return;
+                        throw new Error('Please add Binance Smart Chain network to your wallet');
                     }
                 } else {
-                    setError('Please switch to Binance Smart Chain network in your wallet');
-                    setIsConnecting(false);
-                    return;
+                    throw new Error('Please switch to Binance Smart Chain network in your wallet');
                 }
             }
 
             // Verify we're on BSC network
             const chainId = await window.ethereum.request({ method: 'eth_chainId' });
             if (chainId !== '0x38') {
-                setError('Please make sure you are connected to Binance Smart Chain network');
-                setIsConnecting(false);
-                return;
-            }
-
-            // Request account access
-            const accounts = await window.ethereum.request({ 
-                method: 'eth_requestAccounts' 
-            });
-
-            if (!accounts || accounts.length === 0) {
-                throw new Error('No accounts found in MetaMask. Please create or import an account.');
-            }
-
-            // Get the selected account
-            const newAccount = accounts[0];
-
-            // Check if this exact account is already connected
-            const isWalletConnected = user.walletAddresses?.some(
-                w => w.address.toLowerCase() === newAccount.toLowerCase()
-            );
-            
-            if (isWalletConnected) {
-                throw new Error('This account is already connected. Please select a different account from MetaMask.');
+                throw new Error('Please make sure you are connected to Binance Smart Chain network');
             }
 
             // Activate Web3React
-            try {
-                await activate(injected);
-                
-                // Save wallet to user account through AuthContext
-                const result = await connectWalletToAccount(newAccount);
-                
-                if (result && result.user) {
-                    setSelectedWallet(newAccount);
-                    setSuccess('Wallet connected successfully');
-                } else {
-                    throw new Error('Failed to connect wallet to your account');
-                }
-            } catch (error) {
-                console.error('Activation error:', error);
-                throw new Error('Failed to activate wallet connection. Please try again.');
+            await activate(injected, undefined, true);
+
+            // Save wallet to user account through AuthContext
+            const result = await connectWalletToAccount(newAccount);
+            
+            if (result && result.user) {
+                setSelectedWallet(newAccount);
+                setSuccess('Wallet connected successfully');
+            } else {
+                throw new Error('Failed to connect wallet to your account');
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
@@ -190,6 +193,24 @@ const Profile = () => {
             setIsConnecting(false);
         }
     };
+
+    // Add account change listener
+    useEffect(() => {
+        if (window.ethereum) {
+            const handleAccountsChanged = (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected their wallet
+                    deactivate();
+                    setSelectedWallet(null);
+                }
+            };
+
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            return () => {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            };
+        }
+    }, [deactivate]);
 
     // Add network change listener
     useEffect(() => {
