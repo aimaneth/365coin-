@@ -18,20 +18,42 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             fetchCurrentUser();
         } else {
             setLoading(false);
         }
+
+        const handleStorageChange = (e) => {
+            if (e.key === 'token') {
+                if (!e.newValue) {
+                    setCurrentUser(null);
+                    delete api.defaults.headers.common['Authorization'];
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
     const fetchCurrentUser = async () => {
         try {
             const response = await api.get('/api/auth/me');
-            setCurrentUser(response.data);
+            if (response.data) {
+                setCurrentUser(response.data);
+            } else {
+                localStorage.removeItem('token');
+                delete api.defaults.headers.common['Authorization'];
+                setCurrentUser(null);
+            }
         } catch (error) {
             console.error('Error fetching user:', error);
-            localStorage.removeItem('token');
-            delete api.defaults.headers.common['Authorization'];
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                localStorage.removeItem('token');
+                delete api.defaults.headers.common['Authorization'];
+                setCurrentUser(null);
+            }
         } finally {
             setLoading(false);
         }

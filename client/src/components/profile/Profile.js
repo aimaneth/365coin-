@@ -91,6 +91,38 @@ const Profile = () => {
                 throw new Error('Please login to connect your wallet');
             }
 
+            // Switch to BSC network first
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }], // BSC Mainnet
+                });
+            } catch (switchError) {
+                // This error code indicates that the chain has not been added to MetaMask
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: '0x38',
+                                chainName: 'Binance Smart Chain',
+                                nativeCurrency: {
+                                    name: 'BNB',
+                                    symbol: 'BNB',
+                                    decimals: 18
+                                },
+                                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                                blockExplorerUrls: ['https://bscscan.com/']
+                            }]
+                        });
+                    } catch (addError) {
+                        throw new Error('Failed to add BSC network to MetaMask. Please try again.');
+                    }
+                } else {
+                    throw new Error('Failed to switch to BSC network. Please try again.');
+                }
+            }
+
             // Request account access
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
@@ -112,11 +144,15 @@ const Profile = () => {
                 throw new Error('This account is already connected. Please select a different account from MetaMask.');
             }
 
-            // Activate Web3React
+            // Activate Web3React with error handling
             try {
-                await activate(injected, undefined, true);
+                await activate(injected, (error) => {
+                    console.error('Activation error:', error);
+                    throw new Error('Failed to activate wallet connection. Please make sure you are on the BSC network.');
+                }, true);
             } catch (error) {
-                throw new Error('Failed to activate wallet connection. Please try again.');
+                console.error('Activation error:', error);
+                throw new Error('Failed to activate wallet connection. Please make sure you are on the BSC network.');
             }
 
             // Save wallet to user account through AuthContext
@@ -126,7 +162,7 @@ const Profile = () => {
                 setSelectedWallet(newAccount);
                 setSuccess('Wallet connected successfully');
             } else {
-                throw new Error('Failed to connect wallet to your account');
+                throw new Error('Failed to connect wallet to your account. Please try again.');
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
