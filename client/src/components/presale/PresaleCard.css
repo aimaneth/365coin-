@@ -244,29 +244,31 @@
 .address-value {
     font-family: monospace;
     background: rgba(255, 255, 255, 0.05);
-    padding: 20px;
+    padding: 16px;
     border-radius: 12px;
     color: var(--primary);
-    font-size: 18px;
+    font-size: 15px;
     word-break: break-all;
     text-align: center;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     border: 1px solid rgba(240, 192, 0, 0.1);
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 .copy-address-btn {
-    background: var(--primary-gradient);
+    background: var(--primary);
     color: var(--background);
     border: none;
     border-radius: 16px;
-    padding: 20px;
-    font-size: 18px;
+    padding: 16px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
     transition: all 0.3s ease;
     margin-top: 8px;
@@ -275,10 +277,11 @@
 .copy-address-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(240, 192, 0, 0.2);
+    background: var(--primary-hover);
 }
 
 .copy-address-btn svg {
-    font-size: 20px;
+    font-size: 18px;
 }
 
 @media (max-width: 768px) {
@@ -339,13 +342,18 @@
     }
 
     .address-value {
-        font-size: 14px;
+        font-size: 13px;
         padding: 12px;
+        letter-spacing: 0.2px;
     }
 
     .copy-address-btn {
         padding: 14px;
         font-size: 15px;
         gap: 8px;
+    }
+
+    .copy-address-btn svg {
+        font-size: 16px;
     }
 } 
