@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWeb3React } from '@web3-react/core';
 import { injected } from '../../utils/connectors';
@@ -91,36 +91,14 @@ const Profile = () => {
                 throw new Error('Please login to connect your wallet');
             }
 
-            // Switch to BSC network first
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }], // BSC Mainnet
-                });
-            } catch (switchError) {
-                // This error code indicates that the chain has not been added to MetaMask
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: '0x38',
-                                chainName: 'Binance Smart Chain',
-                                nativeCurrency: {
-                                    name: 'BNB',
-                                    symbol: 'BNB',
-                                    decimals: 18
-                                },
-                                rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                                blockExplorerUrls: ['https://bscscan.com/']
-                            }]
-                        });
-                    } catch (addError) {
-                        throw new Error('Failed to add BSC network to MetaMask. Please try again.');
-                    }
-                } else {
-                    throw new Error('Failed to switch to BSC network. Please try again.');
-                }
+            // Get current chain ID
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            
+            // If not on BSC network (chainId !== '0x38'), show error without disconnecting
+            if (chainId !== '0x38') {
+                setError('Please switch to Binance Smart Chain network in your wallet');
+                setIsConnecting(false);
+                return;
             }
 
             // Request account access
@@ -144,15 +122,12 @@ const Profile = () => {
                 throw new Error('This account is already connected. Please select a different account from MetaMask.');
             }
 
-            // Activate Web3React with error handling
+            // Activate Web3React
             try {
-                await activate(injected, (error) => {
-                    console.error('Activation error:', error);
-                    throw new Error('Failed to activate wallet connection. Please make sure you are on the BSC network.');
-                }, true);
+                await activate(injected);
             } catch (error) {
                 console.error('Activation error:', error);
-                throw new Error('Failed to activate wallet connection. Please make sure you are on the BSC network.');
+                throw new Error('Failed to activate wallet connection. Please try again.');
             }
 
             // Save wallet to user account through AuthContext
@@ -162,23 +137,44 @@ const Profile = () => {
                 setSelectedWallet(newAccount);
                 setSuccess('Wallet connected successfully');
             } else {
-                throw new Error('Failed to connect wallet to your account. Please try again.');
+                throw new Error('Failed to connect wallet to your account');
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
             const errorMessage = error.message || 'Failed to connect wallet';
             setError(errorMessage);
             
-            // Deactivate Web3React if there was an error
-            try {
-                await deactivate();
-            } catch (deactivateError) {
-                console.error('Error deactivating:', deactivateError);
+            // Only deactivate if we actually activated
+            if (active) {
+                try {
+                    await deactivate();
+                } catch (deactivateError) {
+                    console.error('Error deactivating:', deactivateError);
+                }
             }
         } finally {
             setIsConnecting(false);
         }
     };
+
+    // Add network change listener
+    useEffect(() => {
+        if (window.ethereum) {
+            const handleChainChanged = (chainId) => {
+                if (chainId !== '0x38') {
+                    setError('Please switch to Binance Smart Chain network');
+                } else {
+                    setError('');
+                }
+            };
+
+            window.ethereum.on('chainChanged', handleChainChanged);
+
+            return () => {
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            };
+        }
+    }, []);
 
     const switchWallet = async (walletAddress) => {
         if (walletLoading) return;
