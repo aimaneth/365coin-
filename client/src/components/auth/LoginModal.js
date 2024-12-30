@@ -1,27 +1,15 @@
 import React, { useState } from 'react';
-import { FaEnvelope, FaEye, FaEyeSlash, FaTimes, FaGoogle, FaGithub } from 'react-icons/fa';
+import { FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import ForgotPasswordModal from './ForgotPasswordModal';
-import './AuthModals.css';
+import './AuthModal.css';
 
 const LoginModal = ({ onClose, onSwitchToSignup }) => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showForgotPassword, setShowForgotPassword] = useState(false);
     const { login } = useAuth();
-
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -29,104 +17,67 @@ const LoginModal = ({ onClose, onSwitchToSignup }) => {
         setLoading(true);
 
         try {
-            await login(formData.email, formData.password);
+            await login(email, password);
             onClose();
         } catch (err) {
-            setError('Failed to login. Please check your credentials.');
+            setError(err.message || 'Failed to log in');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleForgotPassword = () => {
-        setShowForgotPassword(true);
-    };
-
-    if (showForgotPassword) {
-        return (
-            <ForgotPasswordModal 
-                onClose={onClose}
-                onBackToLogin={() => setShowForgotPassword(false)}
-            />
-        );
-    }
-
     return (
-        <div className="auth-modal" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="modal-content">
-                <button className="close-button" onClick={onClose}>
+        <div className="auth-modal">
+            <div className="modal-header">
+                <h2>Login</h2>
+                <button className="close-btn" onClick={onClose}>
                     <FaTimes />
                 </button>
-                
-                <h2>Welcome Back</h2>
-                {error && <div className="error-message">{error}</div>}
+            </div>
 
-                <div className="social-auth-buttons">
-                    <button className="social-auth-btn">
-                        <FaGoogle /> Google
-                    </button>
-                    <button className="social-auth-btn">
-                        <FaGithub /> GitHub
-                    </button>
+            {error && <div className="error-message">{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
                 </div>
 
-                <div className="modal-divider">
-                    <span>or continue with email</span>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Email Address</label>
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                        <FaEnvelope className="input-icon" />
-                    </div>
-                    <div className="form-group">
-                        <label>Password</label>
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <div className="password-input">
                         <input
                             type={showPassword ? "text" : "password"}
-                            name="password"
-                            placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleChange}
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        <div 
-                            className="input-icon" 
-                            onClick={togglePasswordVisibility}
-                            style={{ cursor: 'pointer' }}
+                        <button
+                            type="button"
+                            className="toggle-password"
+                            onClick={() => setShowPassword(!showPassword)}
                         >
                             {showPassword ? <FaEyeSlash /> : <FaEye />}
-                        </div>
-                    </div>
-
-                    <div className="form-options">
-                        <label className="remember-me">
-                            <input type="checkbox" /> Remember me
-                        </label>
-                        <button 
-                            type="button" 
-                            className="forgot-password-btn"
-                            onClick={handleForgotPassword}
-                        >
-                            Forgot password?
                         </button>
                     </div>
+                </div>
 
-                    <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
-                </form>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Login'}
+                </button>
+            </form>
 
-                <p className="switch-text">
-                    Don't have an account?
-                    <button onClick={onSwitchToSignup} className="switch-btn">
+            <div className="auth-footer">
+                <p>
+                    Don't have an account?{' '}
+                    <button className="switch-btn" onClick={onSwitchToSignup}>
                         Sign up
                     </button>
                 </p>
