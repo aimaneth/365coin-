@@ -139,33 +139,34 @@ const PresaleCard = () => {
 
             <div className="wallet-address">
                 <h3>How to Participate</h3>
+                
                 <div className="instructions">
                     <p>1. Copy the payment address below</p>
                     <p>2. Send {paymentMethod.toUpperCase()} to this address from your wallet</p>
                     <p>3. Tokens will be automatically sent to your wallet</p>
                 </div>
-                <div className="address-display">
-                    <div className="address-box">
-                        <label>Payment Address ({paymentMethod.toUpperCase()})</label>
-                        <div className="address-value">
-                            {presaleData.walletAddresses[paymentMethod]}
-                        </div>
+
+                <div className="address-box">
+                    <label>Payment Address ({paymentMethod.toUpperCase()})</label>
+                    <div className="address-value">
+                        {presaleData.walletAddresses[paymentMethod]}
                     </div>
-                    <button 
-                        className="copy-address-btn"
-                        onClick={handleCopyAddress}
-                    >
-                        {copied ? (
-                            <>
-                                <FaCheck /> Address Copied!
-                            </>
-                        ) : (
-                            <>
-                                <FaCopy /> Copy Address
-                            </>
-                        )}
-                    </button>
                 </div>
+
+                <button 
+                    className="copy-address-btn"
+                    onClick={handleCopyAddress}
+                >
+                    {copied ? (
+                        <>
+                            <FaCheck /> Address Copied!
+                        </>
+                    ) : (
+                        <>
+                            <FaCopy /> Copy Address
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     );

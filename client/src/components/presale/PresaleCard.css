@@ -169,33 +169,39 @@
 }
 
 .wallet-address {
-    margin-bottom: 32px;
+    margin-top: 40px;
     width: 100%;
 }
 
 .wallet-address h3 {
-    font-size: 20px;
+    font-size: 24px;
     color: var(--text);
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     text-align: center;
+    font-weight: 600;
+    background: linear-gradient(135deg, #FFFFFF 0%, rgba(255, 255, 255, 0.8) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .instructions {
     background: rgba(240, 192, 0, 0.05);
     border: 1px solid rgba(240, 192, 0, 0.1);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
 }
 
 .instructions p {
     color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    padding-left: 12px;
 }
 
 .instructions p:last-child {
@@ -205,52 +211,56 @@
 .address-display {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
     width: 100%;
 }
 
 .address-box {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 24px;
     width: 100%;
 }
 
 .address-box label {
     display: block;
     color: var(--text-secondary);
-    font-size: 14px;
-    margin-bottom: 8px;
+    font-size: 15px;
+    margin-bottom: 16px;
+    text-align: center;
+    font-weight: 500;
 }
 
 .address-value {
     font-family: monospace;
     background: rgba(255, 255, 255, 0.05);
-    padding: 16px;
-    border-radius: 8px;
+    padding: 20px;
+    border-radius: 12px;
     color: var(--primary);
-    font-size: 16px;
+    font-size: 18px;
     word-break: break-all;
     text-align: center;
     letter-spacing: 0.5px;
+    border: 1px solid rgba(240, 192, 0, 0.1);
 }
 
 .copy-address-btn {
     background: var(--primary-gradient);
     color: var(--background);
     border: none;
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 16px;
+    border-radius: 16px;
+    padding: 20px;
+    font-size: 18px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     width: 100%;
     transition: all 0.3s ease;
+    margin-top: 8px;
 }
 
 .copy-address-btn:hover {
@@ -259,31 +269,40 @@
 }
 
 .copy-address-btn svg {
-    font-size: 18px;
-}
-
-/* Remove old styles */
-.address-row,
-.copy-btn {
-    display: none;
+    font-size: 20px;
 }
 
 @media (max-width: 480px) {
+    .wallet-address {
+        margin-top: 32px;
+    }
+
     .wallet-address h3 {
-        font-size: 18px;
+        font-size: 20px;
+        margin-bottom: 20px;
     }
 
     .instructions {
-        padding: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .instructions p {
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .address-box {
+        padding: 20px;
     }
 
     .address-value {
         font-size: 14px;
-        padding: 12px;
+        padding: 16px;
     }
 
     .copy-address-btn {
-        padding: 14px;
-        font-size: 15px;
+        padding: 16px;
+        font-size: 16px;
     }
 } 
