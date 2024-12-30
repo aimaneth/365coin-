@@ -17,8 +17,12 @@ const LoginModal = ({ onClose, onSwitchToSignup }) => {
         setLoading(true);
 
         try {
-            await login(email, password);
-            onClose();
+            const result = await login(email, password);
+            if (result.success) {
+                onClose();
+            } else {
+                setError(result.error || 'Failed to log in');
+            }
         } catch (err) {
             setError(err.message || 'Failed to log in');
         } finally {

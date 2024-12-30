@@ -76,15 +76,36 @@ router.post('/signup', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Received login request:', { email: req.body.email }); // Debug log
     const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      console.log('Missing required fields:', { email: !!email, password: !!password }); // Debug log
+      return res.status(400).json({ 
+        message: 'Email and password are required' 
+      });
+    }
+
+    // Check email format
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      console.log('Invalid email format:', email); // Debug log
+      return res.status(400).json({ 
+        message: 'Invalid email format' 
+      });
+    }
+
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
+      console.log('User not found:', email); // Debug log
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('Invalid password for user:', email); // Debug log
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
@@ -93,13 +114,17 @@ router.post('/login', async (req, res) => {
     const userResponse = user.toJSON();
     delete userResponse.password;
 
+    console.log('Login successful:', { userId: user._id }); // Debug log
     res.json({ 
       user: userResponse, 
       token 
     });
   } catch (error) {
     console.error('Login Error:', error);
-    res.status(500).json({ message: 'Login failed', error: error.message });
+    res.status(500).json({ 
+      message: 'Login failed', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 

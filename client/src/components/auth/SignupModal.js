@@ -18,8 +18,12 @@ const SignupModal = ({ onClose, onSwitchToLogin }) => {
         setLoading(true);
 
         try {
-            await signup(email, password, username);
-            onClose();
+            const result = await signup(username, email, password);
+            if (result.success) {
+                onClose();
+            } else {
+                setError(result.error || 'Failed to create an account');
+            }
         } catch (err) {
             setError(err.message || 'Failed to create an account');
         } finally {
