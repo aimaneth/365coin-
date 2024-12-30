@@ -1,0 +1,14 @@
+{
+  "buildpacks": [
+    {
+      "name": "node",
+      "version": "23.x"
+    }
+  ],
+  "build": {
+    "command": "npm install"
+  },
+  "start": {
+    "command": "npm start"
+  }
+} 

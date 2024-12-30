@@ -2,8 +2,11 @@ services:
   - type: web
     name: 365coin-backend
     env: node
+    region: oregon
+    plan: free
     buildCommand: npm install
     startCommand: npm start
+    rootDir: .
     envVars:
       - key: MONGODB_URI
         sync: false
@@ -13,4 +16,5 @@ services:
         value: production
       - key: PORT
         value: "10000"
-    healthCheckPath: /health 
+    healthCheckPath: /health
+    autoDeploy: true 
