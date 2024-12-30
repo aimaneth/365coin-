@@ -5,7 +5,6 @@ import './PresaleCard.css';
 
 const PresaleCard = () => {
     const [paymentMethod, setPaymentMethod] = useState('bnb');
-    const [amount, setAmount] = useState('');
     const [copied, setCopied] = useState(false);
 
     const presaleData = {
@@ -37,13 +36,6 @@ const PresaleCard = () => {
         navigator.clipboard.writeText(address);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-    };
-
-    const handleAmountChange = (e) => {
-        const value = e.target.value;
-        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-            setAmount(value);
-        }
     };
 
     const getPaymentIcon = (method) => {
@@ -146,33 +138,34 @@ const PresaleCard = () => {
             </div>
 
             <div className="wallet-address">
-                <h3>Payment Address</h3>
-                <div className="address-display">
-                    <div className="address-row">
-                        <span className="address" title={presaleData.walletAddresses[paymentMethod]}>
-                            {formatAddress(presaleData.walletAddresses[paymentMethod])}
-                        </span>
-                        <button 
-                            className={`copy-btn ${copied ? 'copied' : ''}`}
-                            onClick={handleCopyAddress}
-                            title={copied ? 'Copied!' : 'Copy address'}
-                        >
-                            {copied ? <FaCheck /> : <FaCopy />}
-                        </button>
-                    </div>
+                <h3>How to Participate</h3>
+                <div className="instructions">
+                    <p>1. Copy the payment address below</p>
+                    <p>2. Send {paymentMethod.toUpperCase()} to this address from your wallet</p>
+                    <p>3. Tokens will be automatically sent to your wallet</p>
                 </div>
-            </div>
-
-            <div className="contribution-input">
-                <input 
-                    type="text"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    placeholder={`Enter amount in ${paymentMethod === 'bnb' ? 'BNB' : 'USDT'}`}
-                />
-                <button className="buy-btn">
-                    Buy Tokens
-                </button>
+                <div className="address-display">
+                    <div className="address-box">
+                        <label>Payment Address ({paymentMethod.toUpperCase()})</label>
+                        <div className="address-value">
+                            {presaleData.walletAddresses[paymentMethod]}
+                        </div>
+                    </div>
+                    <button 
+                        className="copy-address-btn"
+                        onClick={handleCopyAddress}
+                    >
+                        {copied ? (
+                            <>
+                                <FaCheck /> Address Copied!
+                            </>
+                        ) : (
+                            <>
+                                <FaCopy /> Copy Address
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );

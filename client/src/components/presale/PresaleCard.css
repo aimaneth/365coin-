@@ -1,10 +1,12 @@
 .presale-card {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(30, 30, 30, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     padding: 32px;
-    width: 100%;
-    max-width: 480px;
+    max-width: 600px;
+    margin: 0 auto;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .presale-header {
@@ -172,127 +174,115 @@
 }
 
 .wallet-address h3 {
-    font-size: 16px;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.instructions {
+    background: rgba(240, 192, 0, 0.05);
+    border: 1px solid rgba(240, 192, 0, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.instructions p {
     color: var(--text-secondary);
-    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.instructions p:last-child {
+    margin-bottom: 0;
 }
 
 .address-display {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.address-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    align-items: center;
-    width: 100%;
-}
-
-.address {
-    font-family: monospace;
-    color: var(--text);
-    font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
-}
-
-.copy-btn {
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: none;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.copy-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text);
-}
-
-.copy-btn.copied {
-    background: var(--success);
-    color: var(--background);
-}
-
-.contribution-input {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    width: 100%;
 }
 
-.contribution-input input {
-    width: 100%;
-    padding: 16px;
+.address-box {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    color: var(--text);
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.contribution-input input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.buy-btn {
-    width: 100%;
     padding: 16px;
+    width: 100%;
+}
+
+.address-box label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.address-value {
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 16px;
+    border-radius: 8px;
+    color: var(--primary);
+    font-size: 16px;
+    word-break: break-all;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.copy-address-btn {
     background: var(--primary-gradient);
+    color: var(--background);
     border: none;
     border-radius: 12px;
-    color: var(--background);
+    padding: 16px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
     transition: all 0.3s ease;
 }
 
-.buy-btn:hover {
+.copy-address-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(240, 192, 0, 0.2);
 }
 
-/* Mobile Responsive */
+.copy-address-btn svg {
+    font-size: 18px;
+}
+
+/* Remove old styles */
+.address-row,
+.copy-btn {
+    display: none;
+}
+
 @media (max-width: 480px) {
-    .presale-card {
-        padding: 24px;
+    .wallet-address h3 {
+        font-size: 18px;
     }
 
-    .method-buttons {
-        grid-template-columns: 1fr;
-    }
-
-    .presale-stats {
-        grid-template-columns: 1fr;
-    }
-
-    .stat-item {
+    .instructions {
         padding: 16px;
     }
 
-    .contribution-input input,
-    .buy-btn {
+    .address-value {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    .copy-address-btn {
         padding: 14px;
         font-size: 15px;
     }
