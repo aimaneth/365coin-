@@ -245,6 +245,14 @@
 
     .hero-content {
         text-align: center;
+        order: 2;
+    }
+
+    .presale-wrapper {
+        width: 100%;
+        margin-top: 0;
+        align-items: center;
+        order: 1;
     }
 
     .hero-text p {
@@ -257,12 +265,6 @@
 
     .feature-item:hover {
         transform: translateY(-2px);
-    }
-
-    .presale-wrapper {
-        width: 100%;
-        margin-top: 40px;
-        align-items: center;
     }
 
     .hero-stats {
