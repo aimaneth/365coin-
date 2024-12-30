@@ -3,6 +3,14 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
+// Create custom axios instance
+const api = axios.create({
+    baseURL: process.env.REACT_APP_API_URL || 'https://three65coin-backend.onrender.com',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
 export function useAuth() {
     return useContext(AuthContext);
 }
@@ -12,21 +20,12 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [walletLoading, setWalletLoading] = useState(false);
 
-    // Use environment variable for API URL
-    const API_URL = process.env.REACT_APP_API_URL || 'https://three65coin-backend.onrender.com';
-
-    // Configure axios defaults
-    useEffect(() => {
-        axios.defaults.baseURL = API_URL;
-        axios.defaults.headers.common['Content-Type'] = 'application/json';
-    }, [API_URL]);
-
     useEffect(() => {
         // Check for token in localStorage
         const token = localStorage.getItem('token');
         if (token) {
             // Set axios default header
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            api.defaults.headers['Authorization'] = `Bearer ${token}`;
             // Verify token and get user data
             verifyToken();
         } else {
@@ -36,11 +35,11 @@ export function AuthProvider({ children }) {
 
     const verifyToken = async () => {
         try {
-            const response = await axios.get('/api/auth/verify');
+            const response = await api.get('/api/auth/verify');
             setCurrentUser(response.data.user);
         } catch (error) {
             localStorage.removeItem('token');
-            delete axios.defaults.headers.common['Authorization'];
+            delete api.defaults.headers['Authorization'];
         } finally {
             setLoading(false);
         }
@@ -48,14 +47,14 @@ export function AuthProvider({ children }) {
 
     const signup = async (email, password, username) => {
         try {
-            const response = await axios.post('/api/auth/signup', {
+            const response = await api.post('/api/auth/signup', {
                 email,
                 password,
                 username
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            api.defaults.headers['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
             return user;
         } catch (error) {
@@ -65,13 +64,13 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('/api/auth/login', {
+            const response = await api.post('/api/auth/login', {
                 email,
                 password
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            api.defaults.headers['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
             return user;
         } catch (error) {
@@ -81,18 +80,14 @@ export function AuthProvider({ children }) {
 
     const logout = () => {
         localStorage.removeItem('token');
-        delete axios.defaults.headers.common['Authorization'];
+        delete api.defaults.headers['Authorization'];
         setCurrentUser(null);
     };
 
     const connectWalletToAccount = async (walletAddress) => {
         try {
             setWalletLoading(true);
-            console.log('Connecting wallet:', walletAddress);
-            const response = await axios.post('/api/auth/connect-wallet', { walletAddress });
-            console.log('Wallet connection response:', response.data);
-            
-            // Update the user state with the new wallet data
+            const response = await api.post('/api/auth/connect-wallet', { walletAddress });
             if (response.data.user) {
                 setCurrentUser(response.data.user);
                 return response.data;
@@ -100,8 +95,7 @@ export function AuthProvider({ children }) {
                 throw new Error('Invalid response from server');
             }
         } catch (error) {
-            console.error('Wallet Connection Error:', error.response?.data || error);
-            throw error.response?.data?.message || error.message || 'Failed to connect wallet';
+            throw error.response?.data?.message || 'Failed to connect wallet';
         } finally {
             setWalletLoading(false);
         }
@@ -110,7 +104,7 @@ export function AuthProvider({ children }) {
     const disconnectWalletFromAccount = async (walletAddress) => {
         try {
             setWalletLoading(true);
-            const response = await axios.post('/api/auth/disconnect-wallet', { walletAddress });
+            const response = await api.post('/api/auth/disconnect-wallet', { walletAddress });
             setCurrentUser(response.data.user); // Update user data without the wallet
             return response.data;
         } catch (error) {
@@ -125,7 +119,7 @@ export function AuthProvider({ children }) {
     const updateWalletName = async (walletAddress, newName) => {
         try {
             setWalletLoading(true);
-            const response = await axios.put('/api/auth/wallet/update-name', {
+            const response = await api.put('/api/auth/wallet/update-name', {
                 walletAddress,
                 newName
             });
@@ -142,7 +136,7 @@ export function AuthProvider({ children }) {
     const getWalletBalance = async (walletAddress) => {
         try {
             setWalletLoading(true);
-            const response = await axios.get(`/api/auth/wallet/balance/${walletAddress}`);
+            const response = await api.get(`/api/auth/wallet/balance/${walletAddress}`);
             return response.data.balance;
         } catch (error) {
             console.error('Wallet Balance Error:', error);
@@ -155,7 +149,7 @@ export function AuthProvider({ children }) {
     const getWalletTransactions = async (walletAddress, page = 1, limit = 10) => {
         try {
             setWalletLoading(true);
-            const response = await axios.get(
+            const response = await api.get(
                 `/api/auth/wallet/transactions/${walletAddress}`,
                 { params: { page, limit } }
             );
@@ -171,7 +165,7 @@ export function AuthProvider({ children }) {
     const verifyWalletOwnership = async (walletAddress, message, signature) => {
         try {
             setWalletLoading(true);
-            const response = await axios.post('/api/auth/wallet/verify-ownership', {
+            const response = await api.post('/api/auth/wallet/verify-ownership', {
                 walletAddress,
                 message,
                 signature
