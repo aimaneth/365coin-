@@ -83,44 +83,18 @@ const Profile = () => {
         try {
             // Check if MetaMask is installed
             if (!window.ethereum) {
-                console.error('MetaMask not found');
                 throw new Error('Please install MetaMask to connect your wallet');
             }
-            console.log('MetaMask detected');
 
             // Check if user is logged in
             if (!user) {
-                console.error('No user found - need to login first');
                 throw new Error('Please login to connect your wallet');
             }
-            console.log('User authenticated:', user);
 
-            // Request all accounts to show account selection
-            console.log('Requesting all MetaMask accounts...');
-            const allAccounts = await window.ethereum.request({
-                method: 'wallet_getPermissions'
-            });
-            console.log('All available accounts:', allAccounts);
-
-            // Request specific account selection
-            console.log('Requesting account selection...');
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_requestPermissions',
-                    params: [{
-                        eth_accounts: {}
-                    }]
-                });
-            } catch (err) {
-                // If user cancels the permission request, try direct account request
-                console.log('Permission request cancelled, trying direct account request');
-            }
-
-            // Get the selected account
+            // Request account access
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
             });
-            console.log('MetaMask accounts received:', accounts);
 
             if (!accounts || accounts.length === 0) {
                 throw new Error('No accounts found in MetaMask. Please create or import an account.');
@@ -128,7 +102,6 @@ const Profile = () => {
 
             // Get the selected account
             const newAccount = accounts[0];
-            console.log('Selected account to connect:', newAccount);
 
             // Check if this exact account is already connected
             const isWalletConnected = user.walletAddresses?.some(
@@ -136,34 +109,36 @@ const Profile = () => {
             );
             
             if (isWalletConnected) {
-                console.error('This specific account already connected:', newAccount);
-                throw new Error('This account is already connected. Please select a different account from MetaMask (you can use the MetaMask account switcher to select or create another account).');
+                throw new Error('This account is already connected. Please select a different account from MetaMask.');
             }
-            console.log('Account is not yet connected, proceeding...');
 
             // Activate Web3React
-            console.log('Activating Web3React...');
-            await activate(injected);
-            console.log('Web3React activated successfully');
+            try {
+                await activate(injected, undefined, true);
+            } catch (error) {
+                throw new Error('Failed to activate wallet connection. Please try again.');
+            }
 
             // Save wallet to user account through AuthContext
-            console.log('Attempting to save wallet to account...');
             const result = await connectWalletToAccount(newAccount);
-            console.log('Wallet connection result:', result);
             
             if (result && result.user) {
-                console.log('Wallet connected successfully:', newAccount);
                 setSelectedWallet(newAccount);
                 setSuccess('Wallet connected successfully');
             } else {
-                throw new Error('Failed to get confirmation of wallet connection');
+                throw new Error('Failed to connect wallet to your account');
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
-            const errorMessage = error.message.includes('already connected') ? 
-                error.message + ' Click the MetaMask extension, then click the account icon at the top right to switch or add accounts.' :
-                error.message || 'Failed to connect wallet';
+            const errorMessage = error.message || 'Failed to connect wallet';
             setError(errorMessage);
+            
+            // Deactivate Web3React if there was an error
+            try {
+                await deactivate();
+            } catch (deactivateError) {
+                console.error('Error deactivating:', deactivateError);
+            }
         } finally {
             setIsConnecting(false);
         }

@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [walletLoading, setWalletLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -101,13 +102,50 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const connectWalletToAccount = async (walletAddress) => {
+        try {
+            setWalletLoading(true);
+            setError('');
+
+            const response = await api.post('/api/auth/connect-wallet', { walletAddress });
+            setCurrentUser(response.data.user);
+            return { success: true, user: response.data.user };
+        } catch (error) {
+            console.error('Connect wallet error:', error.response?.data || error.message);
+            setError(error.response?.data?.message || 'Failed to connect wallet');
+            return { success: false, error: error.response?.data?.message || 'Failed to connect wallet' };
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
+    const disconnectWalletFromAccount = async (walletAddress) => {
+        try {
+            setWalletLoading(true);
+            setError('');
+
+            const response = await api.post('/api/auth/disconnect-wallet', { walletAddress });
+            setCurrentUser(response.data.user);
+            return { success: true, user: response.data.user };
+        } catch (error) {
+            console.error('Disconnect wallet error:', error.response?.data || error.message);
+            setError(error.response?.data?.message || 'Failed to disconnect wallet');
+            return { success: false, error: error.response?.data?.message || 'Failed to disconnect wallet' };
+        } finally {
+            setWalletLoading(false);
+        }
+    };
+
     const value = {
         currentUser,
         loading,
         error,
+        walletLoading,
         signup,
         login,
-        logout
+        logout,
+        connectWalletToAccount,
+        disconnectWalletFromAccount
     };
 
     return (
