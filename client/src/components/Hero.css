@@ -238,7 +238,7 @@
     }
 
     .hero-container {
-        flex-direction: column-reverse;
+        flex-direction: column;
         gap: 60px;
         padding-top: 40px;
     }
@@ -262,6 +262,7 @@
     .presale-wrapper {
         width: 100%;
         margin-top: 40px;
+        align-items: center;
     }
 
     .hero-stats {

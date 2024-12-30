@@ -3,10 +3,14 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     padding: 32px;
-    max-width: 600px;
+    width: 100%;
+    max-width: 480px;
     margin: 0 auto;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 }
 
 .presale-header {
@@ -169,14 +173,16 @@
 }
 
 .wallet-address {
-    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
     width: 100%;
 }
 
 .wallet-address h3 {
     font-size: 24px;
     color: var(--text);
-    margin-bottom: 24px;
+    margin-bottom: 0;
     text-align: center;
     font-weight: 600;
     background: linear-gradient(135deg, #FFFFFF 0%, rgba(255, 255, 255, 0.8) 100%);
@@ -190,7 +196,7 @@
     border: 1px solid rgba(240, 192, 0, 0.1);
     border-radius: 16px;
     padding: 24px;
-    margin-bottom: 32px;
+    margin: 0;
 }
 
 .instructions p {
@@ -221,6 +227,9 @@
     border-radius: 16px;
     padding: 24px;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .address-box label {
@@ -272,37 +281,71 @@
     font-size: 20px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    .presale-card {
+        padding: 24px;
+        gap: 24px;
+    }
+
     .wallet-address {
-        margin-top: 32px;
+        gap: 20px;
     }
 
     .wallet-address h3 {
-        font-size: 20px;
-        margin-bottom: 20px;
+        font-size: 22px;
     }
 
     .instructions {
         padding: 20px;
-        margin-bottom: 24px;
+    }
+
+    .address-box {
+        padding: 20px;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .presale-card {
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .wallet-address {
+        gap: 16px;
+    }
+
+    .wallet-address h3 {
+        font-size: 20px;
+    }
+
+    .instructions {
+        padding: 16px;
     }
 
     .instructions p {
         font-size: 14px;
         gap: 8px;
+        padding-left: 8px;
     }
 
     .address-box {
-        padding: 20px;
+        padding: 16px;
+        gap: 10px;
+    }
+
+    .address-box label {
+        font-size: 14px;
     }
 
     .address-value {
         font-size: 14px;
-        padding: 16px;
+        padding: 12px;
     }
 
     .copy-address-btn {
-        padding: 16px;
-        font-size: 16px;
+        padding: 14px;
+        font-size: 15px;
+        gap: 8px;
     }
 } 
