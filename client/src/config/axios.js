@@ -7,14 +7,21 @@ const api = axios.create({
         'Accept': 'application/json'
     },
     withCredentials: true,
-    timeout: 10000, // 10 second timeout
+    timeout: 30000, // Increase to 30 seconds
     timeoutErrorMessage: 'Request timed out. Please try again.',
-    // Retry on network errors
-    retry: 1,
-    retryDelay: 1000
+    // Improve retry mechanism
+    retry: 2,
+    retryDelay: 1000,
+    retryCondition: (error) => {
+        return (
+            axios.isNetworkError(error) || 
+            error.code === 'ECONNABORTED' ||
+            error.response?.status >= 500
+        );
+    }
 });
 
-// Add retry mechanism
+// Add retry mechanism with exponential backoff
 api.interceptors.response.use(undefined, async (err) => {
     const { config } = err;
     if (!config || !config.retry) {
@@ -29,19 +36,27 @@ api.interceptors.response.use(undefined, async (err) => {
 
     config.__retryCount += 1;
 
-    // Create new promise to handle retry
+    // Exponential backoff
+    const backoffDelay = config.retryDelay * Math.pow(2, config.__retryCount - 1);
+    
+    // Create new promise to handle retry with backoff
     const backoff = new Promise((resolve) => {
         setTimeout(() => {
             resolve();
-        }, config.retryDelay || 1000);
+        }, backoffDelay);
     });
+
+    // Clear auth header if it's a 401 error
+    if (err.response?.status === 401) {
+        delete config.headers.Authorization;
+    }
 
     // Wait for backoff before retrying
     await backoff;
     return api(config);
 });
 
-// Request interceptor
+// Request interceptor with better error handling
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -51,11 +66,12 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
+        console.error('Request Error:', error);
         return Promise.reject(error);
     }
 );
 
-// Response interceptor
+// Response interceptor with better error handling
 api.interceptors.response.use(
     (response) => {
         // Cache successful responses for auth endpoints
@@ -70,11 +86,39 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
+        // Handle network errors
+        if (!error.response) {
+            console.error('Network Error:', error);
+            return Promise.reject({
+                response: {
+                    data: {
+                        message: 'Network error. Please check your connection and try again.'
+                    }
+                }
+            });
+        }
+
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED') {
+            console.error('Timeout Error:', error);
+            return Promise.reject({
+                response: {
+                    data: {
+                        message: 'Request timed out. Please try again.'
+                    }
+                }
+            });
+        }
+
+        // Handle 401 errors
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('apiCache');
-            window.location.href = '/';
+            if (!error.config.url.includes('/auth/login')) {
+                window.location.href = '/login';
+            }
         }
+
         return Promise.reject(error);
     }
 );
