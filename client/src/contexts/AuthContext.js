@@ -138,6 +138,20 @@ export function AuthProvider({ children }) {
             setLoading(true);
             setError('');
             
+            // Check cache first
+            const cache = localStorage.getItem('apiCache') ? JSON.parse(localStorage.getItem('apiCache')) : {};
+            const cacheKey = '/api/auth/signup';
+            const cachedData = cache[cacheKey];
+            
+            // If we have cached data and it's less than 5 minutes old, use it
+            if (cachedData && Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
+                const { token, user } = cachedData.data;
+                localStorage.setItem('token', token);
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                setCurrentUser(user);
+                return { success: true };
+            }
+
             const response = await api.post('/api/auth/signup', {
                 username,
                 email,
@@ -151,8 +165,15 @@ export function AuthProvider({ children }) {
             return { success: true };
         } catch (error) {
             console.error('Signup error:', error.response?.data || error.message);
-            setError(error.response?.data?.message || 'Failed to create account');
-            return { success: false, error: error.response?.data?.message || 'Failed to create account' };
+            let errorMessage = error.response?.data?.message || 'Failed to create account';
+            
+            // Handle timeout errors
+            if (error.code === 'ECONNABORTED') {
+                errorMessage = 'Request timed out. Please try again.';
+            }
+            
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
         }
@@ -162,6 +183,20 @@ export function AuthProvider({ children }) {
         try {
             setLoading(true);
             setError('');
+
+            // Check cache first
+            const cache = localStorage.getItem('apiCache') ? JSON.parse(localStorage.getItem('apiCache')) : {};
+            const cacheKey = '/api/auth/login';
+            const cachedData = cache[cacheKey];
+            
+            // If we have cached data and it's less than 5 minutes old, use it
+            if (cachedData && Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
+                const { token, user } = cachedData.data;
+                localStorage.setItem('token', token);
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                setCurrentUser(user);
+                return { success: true };
+            }
 
             const response = await api.post('/api/auth/login', {
                 email,
@@ -175,8 +210,15 @@ export function AuthProvider({ children }) {
             return { success: true };
         } catch (error) {
             console.error('Login error:', error.response?.data || error.message);
-            setError(error.response?.data?.message || 'Failed to log in');
-            return { success: false, error: error.response?.data?.message || 'Failed to log in' };
+            let errorMessage = error.response?.data?.message || 'Failed to log in';
+            
+            // Handle timeout errors
+            if (error.code === 'ECONNABORTED') {
+                errorMessage = 'Request timed out. Please try again.';
+            }
+            
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
         }
