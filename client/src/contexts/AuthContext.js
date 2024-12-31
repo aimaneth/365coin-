@@ -208,19 +208,52 @@ export function AuthProvider({ children }) {
             setWalletLoading(true);
             setError('');
 
-            const response = await api.post('/api/auth/connect-wallet', { walletAddress });
-            if (response.data?.user) {
-                setCurrentUser(response.data.user);
-                return { success: true, user: response.data.user };
-            } else {
+            // Verify we have a token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Authentication required. Please log in again.');
+            }
+
+            // Ensure the Authorization header is set
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+            const response = await api.post('/api/auth/connect-wallet', { 
+                walletAddress 
+            });
+
+            if (!response.data?.user) {
                 throw new Error('Invalid response from server');
             }
+
+            // Update current user with new wallet data
+            setCurrentUser(response.data.user);
+            return { success: true, user: response.data.user };
         } catch (error) {
-            console.error('Connect wallet error:', error.response?.data || error.message);
-            // Don't clear user state on wallet connection errors
-            const errorMessage = error.response?.data?.message || 'Failed to connect wallet';
-            setError(errorMessage);
-            return { success: false, error: errorMessage };
+            console.error('Connect wallet error:', error);
+            
+            // Handle specific error cases
+            if (error.response?.status === 401) {
+                // Token expired or invalid - clear auth state and redirect to login
+                localStorage.removeItem('token');
+                delete api.defaults.headers.common['Authorization'];
+                setCurrentUser(null);
+                return { 
+                    success: false, 
+                    error: 'Session expired. Please log in again.' 
+                };
+            }
+            
+            if (error.response?.status === 400) {
+                return { 
+                    success: false, 
+                    error: error.response.data.message || 'Wallet already connected' 
+                };
+            }
+
+            return { 
+                success: false, 
+                error: error.response?.data?.message || error.message || 'Failed to connect wallet' 
+            };
         } finally {
             setWalletLoading(false);
         }

@@ -104,112 +104,63 @@ const Profile = () => {
     });
 
     const connectNewWallet = async () => {
-        if (walletLoading) return;
-        setIsConnecting(true);
-        setError('');
-        setSuccess('');
-        
         try {
+            setError('');
+            setLoading(true);
+
             // Check if MetaMask is installed
             if (!window.ethereum) {
-                throw new Error('Please install MetaMask to connect your wallet');
+                setError('Please install MetaMask to connect your wallet');
+                return;
             }
 
-            // Check if user is logged in
-            if (!user) {
-                throw new Error('Please login to connect your wallet');
-            }
-
-            // Request account access first
+            // Request account access
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
             });
-
+            
             if (!accounts || accounts.length === 0) {
-                throw new Error('No accounts found in MetaMask. Please create or import an account.');
+                setError('No accounts found. Please check MetaMask and try again.');
+                return;
             }
 
-            // Get the selected account
-            const newAccount = accounts[0];
+            const walletAddress = accounts[0];
 
-            // Check if this exact account is already connected to this user
-            const isWalletConnected = user.walletAddresses?.some(
-                w => w.address.toLowerCase() === newAccount.toLowerCase()
-            );
-            
-            if (isWalletConnected) {
-                throw new Error('This wallet is already connected to your account. Please select a different wallet.');
+            // Check if wallet is already connected
+            if (currentUser?.wallets?.some(w => w.address.toLowerCase() === walletAddress.toLowerCase())) {
+                setError('This wallet is already connected to your account');
+                return;
             }
 
-            // Then try to switch to BSC network
+            // Try to activate Web3React
             try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }], // BSC Mainnet
-                });
-            } catch (switchError) {
-                // This error code indicates that the chain has not been added to MetaMask
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: '0x38',
-                                chainName: 'Binance Smart Chain',
-                                nativeCurrency: {
-                                    name: 'BNB',
-                                    symbol: 'BNB',
-                                    decimals: 18
-                                },
-                                rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                                blockExplorerUrls: ['https://bscscan.com/']
-                            }]
-                        });
-                    } catch (addError) {
-                        throw new Error('Please add Binance Smart Chain network to your wallet');
-                    }
-                } else {
-                    throw new Error('Please switch to Binance Smart Chain network in your wallet');
-                }
+                await activate(injected);
+            } catch (activationError) {
+                console.error('Web3React activation error:', activationError);
+                setError('Failed to activate wallet connection. Please try again.');
+                return;
             }
 
-            // Verify we're on BSC network
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            if (chainId !== '0x38') {
-                throw new Error('Please make sure you are connected to Binance Smart Chain network');
-            }
-
-            // Only activate Web3React after network check
-            await activate(injected, undefined, true);
-
-            // Save wallet to user account through AuthContext
-            const result = await connectWalletToAccount(newAccount);
+            // Connect wallet to account
+            const result = await connectWalletToAccount(walletAddress);
             
-            if (result.success && result.user) {
-                setSelectedWallet(newAccount);
-                setSuccess('Wallet connected successfully');
-            } else {
-                // Check if the error indicates the wallet is connected to another account
-                if (result.error?.includes('already connected') || result.error?.includes('belongs to another')) {
-                    throw new Error('This wallet is already connected to another account. Please use a different wallet.');
+            if (!result.success) {
+                setError(result.error);
+                // Don't deactivate if it's just a validation error
+                if (result.error.includes('Session expired')) {
+                    deactivate();
                 }
-                throw new Error(result.error || 'Failed to connect wallet to your account');
+                return;
             }
+
+            // Success - wallet connected
+            setSuccess('Wallet connected successfully!');
+            setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
-            console.error('Wallet connection error:', error);
-            const errorMessage = error.message || 'Failed to connect wallet';
-            setError(errorMessage);
-            
-            // Only deactivate if we actually activated and it's not a validation error
-            if (active && !errorMessage.includes('already connected') && !errorMessage.includes('Please')) {
-                try {
-                    await deactivate();
-                } catch (deactivateError) {
-                    console.error('Error deactivating:', deactivateError);
-                }
-            }
+            console.error('Connect wallet error:', error);
+            setError(error.message || 'Failed to connect wallet');
         } finally {
-            setIsConnecting(false);
+            setLoading(false);
         }
     };
 
