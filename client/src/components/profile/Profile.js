@@ -120,10 +120,7 @@ const Profile = () => {
                 throw new Error('Please login to connect your wallet');
             }
 
-            // First activate Web3React
-            await activate(injected, undefined, true);
-
-            // Then request account access
+            // Request account access first
             const accounts = await window.ethereum.request({ 
                 method: 'eth_requestAccounts' 
             });
@@ -182,6 +179,9 @@ const Profile = () => {
                 throw new Error('Please make sure you are connected to Binance Smart Chain network');
             }
 
+            // Only activate Web3React after network check
+            await activate(injected, undefined, true);
+
             // Save wallet to user account through AuthContext
             const result = await connectWalletToAccount(newAccount);
             
@@ -200,8 +200,8 @@ const Profile = () => {
             const errorMessage = error.message || 'Failed to connect wallet';
             setError(errorMessage);
             
-            // Only deactivate if we actually activated
-            if (active) {
+            // Only deactivate if we actually activated and it's not a validation error
+            if (active && !errorMessage.includes('already connected') && !errorMessage.includes('Please')) {
                 try {
                     await deactivate();
                 } catch (deactivateError) {
@@ -213,32 +213,22 @@ const Profile = () => {
         }
     };
 
-    // Add account change listener
-    useEffect(() => {
-        if (window.ethereum) {
-            const handleAccountsChanged = (accounts) => {
-                if (accounts.length === 0) {
-                    // User disconnected their wallet
-                    deactivate();
-                    setSelectedWallet(null);
-                }
-            };
-
-            window.ethereum.on('accountsChanged', handleAccountsChanged);
-            return () => {
-                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-            };
-        }
-    }, [deactivate]);
-
     // Add network change listener
     useEffect(() => {
         if (window.ethereum) {
-            const handleChainChanged = (chainId) => {
+            const handleChainChanged = async (chainId) => {
                 if (chainId !== '0x38') {
                     setError('Please switch to Binance Smart Chain network');
                 } else {
                     setError('');
+                    // Try to reactivate if we're on the correct network
+                    if (!active && user) {
+                        try {
+                            await activate(injected);
+                        } catch (error) {
+                            console.error('Failed to reactivate on network change:', error);
+                        }
+                    }
                 }
             };
 
@@ -248,7 +238,36 @@ const Profile = () => {
                 window.ethereum.removeListener('chainChanged', handleChainChanged);
             };
         }
-    }, []);
+    }, [active, user, activate]);
+
+    // Add account change listener
+    useEffect(() => {
+        if (window.ethereum) {
+            const handleAccountsChanged = async (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected their wallet from MetaMask
+                    await deactivate();
+                    setSelectedWallet(null);
+                } else {
+                    // User switched accounts
+                    const newAccount = accounts[0];
+                    if (user?.walletAddresses?.some(w => w.address.toLowerCase() === newAccount.toLowerCase())) {
+                        setSelectedWallet(newAccount);
+                        try {
+                            await activate(injected);
+                        } catch (error) {
+                            console.error('Failed to activate after account change:', error);
+                        }
+                    }
+                }
+            };
+
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            return () => {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            };
+        }
+    }, [deactivate, user, activate]);
 
     const switchWallet = async (walletAddress) => {
         if (walletLoading) return;
