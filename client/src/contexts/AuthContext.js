@@ -130,41 +130,58 @@ export function AuthProvider({ children }) {
             setLoading(true);
             setError('');
 
-            // Check cache first
-            const cache = localStorage.getItem('apiCache') ? JSON.parse(localStorage.getItem('apiCache')) : {};
-            const cacheKey = '/api/auth/login';
-            const cachedData = cache[cacheKey];
-            
-            // If we have cached data and it's less than 5 minutes old, use it
-            if (cachedData && Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
-                const { token, user } = cachedData.data;
-                localStorage.setItem('token', token);
-                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                setCurrentUser(user);
-                return { success: true };
+            // Validate inputs before making request
+            if (!email || !password) {
+                throw new Error('Email and password are required');
             }
 
+            // Make the login request
             const response = await api.post('/api/auth/login', {
                 email,
                 password
             });
 
+            if (!response.data?.token || !response.data?.user) {
+                throw new Error('Invalid response from server');
+            }
+
             const { token, user } = response.data;
+            
+            // Set token and user state
             localStorage.setItem('token', token);
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setCurrentUser(user);
+            
             return { success: true };
         } catch (error) {
             console.error('Login error:', error.response?.data || error.message);
-            let errorMessage = error.response?.data?.message || 'Failed to log in';
             
-            // Handle timeout errors
+            // Handle specific error cases
             if (error.code === 'ECONNABORTED') {
-                errorMessage = 'Request timed out. Please try again.';
+                return { 
+                    success: false, 
+                    error: 'Connection timed out. Please check your internet connection and try again.' 
+                };
             }
             
-            setError(errorMessage);
-            return { success: false, error: errorMessage };
+            if (error.response?.status === 401) {
+                return { 
+                    success: false, 
+                    error: 'Invalid email or password' 
+                };
+            }
+            
+            if (error.response?.status === 429) {
+                return { 
+                    success: false, 
+                    error: 'Too many login attempts. Please try again later.' 
+                };
+            }
+
+            return { 
+                success: false, 
+                error: error.response?.data?.message || 'Failed to log in. Please try again.' 
+            };
         } finally {
             setLoading(false);
         }

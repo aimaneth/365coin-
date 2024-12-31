@@ -7,8 +7,11 @@ const api = axios.create({
         'Accept': 'application/json'
     },
     withCredentials: false,
-    timeout: 15000, // 15 seconds timeout
-    timeoutErrorMessage: 'Request timed out. Please try again.'
+    timeout: 8000, // Reduced timeout to 8 seconds
+    timeoutErrorMessage: 'Request timed out. Please try again.',
+    // Add retry configuration
+    retry: 2,
+    retryDelay: 1000
 });
 
 // Request interceptor
@@ -18,8 +21,6 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        // Add CORS headers
-        config.headers['Access-Control-Allow-Origin'] = '*';
         return config;
     },
     (error) => {
@@ -27,33 +28,39 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor
+// Response interceptor with retry logic
 api.interceptors.response.use(
     (response) => {
         return response;
     },
-    (error) => {
-        // Handle timeout errors
-        if (error.code === 'ECONNABORTED') {
-            return Promise.reject({
-                response: {
-                    data: {
-                        message: 'Request timed out. Please try again.'
-                    }
-                }
-            });
+    async (error) => {
+        const { config } = error;
+        
+        // If config is undefined or we've already retried, reject
+        if (!config || !config.retry) {
+            return Promise.reject(error);
         }
 
-        // Handle 401 errors
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('apiCache');
-            if (!error.config.url.includes('/auth/login')) {
-                window.location.href = '/login';
-            }
+        // Set the retry count
+        config.retryCount = config.retryCount || 0;
+
+        // Check if we should retry the request
+        if (config.retryCount >= config.retry) {
+            // We've run out of retries
+            return Promise.reject(error);
         }
 
-        return Promise.reject(error);
+        // Increment the retry count
+        config.retryCount += 1;
+
+        // Create a delay
+        const delay = new Promise((resolve) => {
+            setTimeout(resolve, config.retryDelay || 1000);
+        });
+
+        // Return the promise with the retry
+        await delay;
+        return api(config);
     }
 );
 
