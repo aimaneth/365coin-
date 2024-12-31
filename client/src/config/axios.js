@@ -6,7 +6,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: true,
+    withCredentials: false,
     timeout: 15000, // 15 seconds timeout
     timeoutErrorMessage: 'Request timed out. Please try again.'
 });
@@ -18,6 +18,8 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // Add CORS headers
+        config.headers['Access-Control-Allow-Origin'] = '*';
         return config;
     },
     (error) => {
