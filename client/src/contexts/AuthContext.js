@@ -54,12 +54,14 @@ export function AuthProvider({ children }) {
                         setCurrentUser(response.data);
                     }
                 } catch (error) {
+                    // Only clear auth state for 401/403 errors
                     if (error.response?.status === 401 || error.response?.status === 403) {
                         localStorage.removeItem('token');
                         delete api.defaults.headers.common['Authorization'];
                         setCurrentUser(null);
                     } else {
-                        // Retry after 5 seconds for non-auth errors
+                        // For other errors (network, server, etc.), keep retrying
+                        console.error('Auth check failed, will retry:', error);
                         retryTimeout = setTimeout(retryAuth, 5000);
                     }
                 }
@@ -190,12 +192,18 @@ export function AuthProvider({ children }) {
             setError('');
 
             const response = await api.post('/api/auth/connect-wallet', { walletAddress });
-            setCurrentUser(response.data.user);
-            return { success: true, user: response.data.user };
+            if (response.data?.user) {
+                setCurrentUser(response.data.user);
+                return { success: true, user: response.data.user };
+            } else {
+                throw new Error('Invalid response from server');
+            }
         } catch (error) {
             console.error('Connect wallet error:', error.response?.data || error.message);
-            setError(error.response?.data?.message || 'Failed to connect wallet');
-            return { success: false, error: error.response?.data?.message || 'Failed to connect wallet' };
+            // Don't clear user state on wallet connection errors
+            const errorMessage = error.response?.data?.message || 'Failed to connect wallet';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
         } finally {
             setWalletLoading(false);
         }
