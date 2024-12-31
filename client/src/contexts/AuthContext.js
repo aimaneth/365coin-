@@ -77,62 +77,6 @@ export function AuthProvider({ children }) {
         };
     }, [currentUser]);
 
-    // Token refresh mechanism
-    useEffect(() => {
-        let refreshInterval;
-        let refreshTimeout;
-        let mounted = true;
-
-        const refreshToken = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token || !mounted) return;
-
-                const response = await api.post('/api/auth/refresh');
-                if (!mounted) return;
-
-                if (response.data?.token) {
-                    localStorage.setItem('token', response.data.token);
-                    api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                    if (response.data.user) {
-                        setCurrentUser(response.data.user);
-                    }
-                }
-            } catch (error) {
-                console.error('Token refresh error:', error);
-                if (!mounted) return;
-
-                // Only clear on auth errors
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    localStorage.removeItem('token');
-                    delete api.defaults.headers.common['Authorization'];
-                    setCurrentUser(null);
-                } else {
-                    // Retry after 5 seconds for non-auth errors
-                    refreshTimeout = setTimeout(refreshToken, 5000);
-                }
-            }
-        };
-
-        const startRefreshCycle = () => {
-            if (!mounted) return;
-            // Initial refresh
-            refreshToken();
-            // Set up interval for subsequent refreshes (every 14 minutes)
-            refreshInterval = setInterval(refreshToken, 14 * 60 * 1000);
-        };
-
-        if (currentUser) {
-            startRefreshCycle();
-        }
-
-        return () => {
-            mounted = false;
-            if (refreshInterval) clearInterval(refreshInterval);
-            if (refreshTimeout) clearTimeout(refreshTimeout);
-        };
-    }, [currentUser]);
-
     const signup = async (username, email, password) => {
         try {
             setLoading(true);
