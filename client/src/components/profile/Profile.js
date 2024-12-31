@@ -389,12 +389,42 @@ const Profile = () => {
                         {error && <div className="error-message">{error}</div>}
                         {success && <div className="success-message">{success}</div>}
                         
+                        {active && account && (
+                            <div className="current-wallet-section">
+                                <h4>
+                                    <FaWallet />
+                                    Currently Connected Wallet
+                                </h4>
+                                <div className="current-wallet-address">
+                                    <span className="wallet-address-text">
+                                        {account}
+                                    </span>
+                                    <div className="wallet-actions">
+                                        <button 
+                                            onClick={() => copyToClipboard(account)}
+                                            className={`copy-address-btn ${copied ? 'copied' : ''}`}
+                                            title="Copy address"
+                                        >
+                                            {copied ? <FaCheck /> : <FaCopy />}
+                                        </button>
+                                        <button 
+                                            onClick={() => disconnectWallet(account)}
+                                            className="disconnect-btn"
+                                            title="Disconnect wallet"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
                         <button 
                             onClick={connectNewWallet}
                             disabled={isConnecting || walletLoading}
                             className={`connect-wallet-btn ${isConnecting || walletLoading ? 'loading' : ''}`}
                         >
-                            {isConnecting ? 'Connecting...' : 'Connect New Wallet'}
+                            {isConnecting ? 'Connecting...' : 'Add New Wallet'}
                         </button>
 
                         <div className="wallets-list">
