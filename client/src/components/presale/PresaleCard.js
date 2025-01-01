@@ -25,9 +25,9 @@ const PresaleCard = () => {
             usdt: "No Limit"
         },
         walletAddresses: {
-            bnb: "0x38f785297824A23b7f1B611BAf0723D7Ab522A2f",
-            bep20: "0x38f785297824A23b7f1B611BAf0723D7Ab522A2f",
-            trc20: "TQjWLJwSHvxzGDKUzGpvWMTgzu2D8cWozJ"
+            bnb: "0x52982024fbdfd53efdd67eb5bf7fa8696b4d3d22",
+            bep20: "0x52982024fbdfd53efdd67eb5bf7fa8696b4d3d22",
+            trc20: "TB6bSDcE3PhDwAEsx7DzSoWCkYtgyudyT7"
         }
     };
 
