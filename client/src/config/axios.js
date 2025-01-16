@@ -7,16 +7,25 @@ const api = axios.create({
         'Accept': 'application/json'
     },
     withCredentials: false,
-    timeout: 8000, // Reduced timeout to 8 seconds
+    timeout: 30000, // Increased timeout to 30 seconds
     timeoutErrorMessage: 'Request timed out. Please try again.',
     // Add retry configuration
-    retry: 2,
-    retryDelay: 1000
+    retry: 3,
+    retryDelay: 1000,
+    // Add request size limits
+    maxContentLength: 10 * 1024 * 1024, // 10MB
+    maxBodyLength: 10 * 1024 * 1024 // 10MB
 });
 
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
+        // Add timestamp to prevent caching
+        config.params = {
+            ...config.params,
+            _t: Date.now()
+        };
+        
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -28,7 +37,7 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor with retry logic
+// Response interceptor with enhanced retry logic
 api.interceptors.response.use(
     (response) => {
         return response;
@@ -53,9 +62,15 @@ api.interceptors.response.use(
         // Increment the retry count
         config.retryCount += 1;
 
-        // Create a delay
+        // Create exponential backoff delay
+        const backoff = Math.pow(2, config.retryCount) * config.retryDelay;
+
+        // Create new promise to handle retry delay
         const delay = new Promise((resolve) => {
-            setTimeout(resolve, config.retryDelay || 1000);
+            setTimeout(() => {
+                console.log(`Retrying request (${config.retryCount}/${config.retry})`);
+                resolve();
+            }, backoff);
         });
 
         // Return the promise with the retry
@@ -63,5 +78,18 @@ api.interceptors.response.use(
         return api(config);
     }
 );
+
+// Add request/response logging in development
+if (process.env.NODE_ENV === 'development') {
+    api.interceptors.request.use(request => {
+        console.log('Starting Request:', request);
+        return request;
+    });
+
+    api.interceptors.response.use(response => {
+        console.log('Response:', response);
+        return response;
+    });
+}
 
 export default api; 
