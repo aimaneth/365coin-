@@ -82,25 +82,47 @@ app.use((err, req, res, next) => {
 const mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 30000,
+    serverSelectionTimeoutMS: 60000,
     socketTimeoutMS: 45000,
     maxPoolSize: 50,
-    minPoolSize: 10
+    minPoolSize: 10,
+    retryWrites: true,
+    w: 'majority',
+    retryReads: true,
+    ssl: true,
+    tls: true,
+    authSource: 'admin'
 };
 
-// Connect to MongoDB and start server
-mongoose.connect(process.env.MONGODB_URI, mongoOptions)
-    .then(() => {
+let connectionAttempts = 0;
+const maxAttempts = 5;
+
+const connectWithRetry = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
         console.log('MongoDB connected successfully');
+        connectionAttempts = 0;
+        
         const PORT = process.env.PORT || 5000;
-        server = app.listen(PORT, () => {
+        app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-    })
-    .catch(err => {
+    } catch (err) {
         console.error('MongoDB connection error:', err);
-        process.exit(1);
-    });
+        connectionAttempts++;
+        
+        if (connectionAttempts < maxAttempts) {
+            console.log(`Retrying connection... Attempt ${connectionAttempts} of ${maxAttempts}`);
+            setTimeout(connectWithRetry, 5000);
+        } else {
+            console.error('Failed to connect to MongoDB after multiple attempts');
+            process.exit(1);
+        }
+    }
+};
+
+// Start connection process
+connectWithRetry();
 
 // Handle MongoDB connection events
 mongoose.connection.on('error', err => {
