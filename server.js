@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 // Set server timeout
-app.set('timeout', 30000); // 30 seconds timeout
+app.set('timeout', 30000);
 
 // CORS configuration
 const corsOptions = {
@@ -22,13 +22,22 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Handle preflight requests
 app.options('*', cors(corsOptions));
 
-// Body parsing middleware with limits
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Database connection check middleware
+app.use((req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(503).json({
+            message: 'Database connection not ready. Please try again.',
+            readyState: mongoose.connection.readyState
+        });
+    }
+    next();
+});
 
 // Debug middleware
 app.use((req, res, next) => {
@@ -39,7 +48,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Add CORS headers to all responses
+// CORS headers middleware
 app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (corsOptions.origin.includes(origin)) {
@@ -59,7 +68,12 @@ app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Server is running' });
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.status(200).json({ 
+        status: 'ok', 
+        message: 'Server is running',
+        database: dbStatus
+    });
 });
 
 // Error handling middleware
@@ -75,52 +89,59 @@ app.use((err, req, res, next) => {
 const mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
-    heartbeatFrequencyMS: 2000,    // Check server status every 2 seconds
-    socketTimeoutMS: 45000,        // Close sockets after 45 seconds of inactivity
-    maxPoolSize: 50,               // Maintain up to 50 socket connections
-    minPoolSize: 10,               // Maintain at least 10 socket connections
-    maxIdleTimeMS: 30000,          // Close idle connections after 30 seconds
-    retryWrites: true,             // Enable retrying write operations
-    retryReads: true,              // Enable retrying read operations
-    family: 4                      // Force IPv4
+    serverSelectionTimeoutMS: 30000,
+    heartbeatFrequencyMS: 2000,
+    socketTimeoutMS: 45000,
+    maxPoolSize: 50,
+    minPoolSize: 10,
+    maxIdleTimeMS: 30000,
+    retryWrites: true,
+    retryReads: true,
+    family: 4,
+    autoIndex: true,
+    connectTimeoutMS: 30000
 };
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, mongoOptions)
-    .then(() => {
-        console.log('Connected to MongoDB');
-        startServer();
-    })
-    .catch(err => {
+let server;
+
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
+        console.log('MongoDB connected successfully');
+        return true;
+    } catch (err) {
         console.error('MongoDB connection error:', err);
+        return false;
+    }
+};
+
+const startServer = async () => {
+    let retries = 5;
+    let connected = false;
+
+    while (retries > 0 && !connected) {
+        connected = await connectDB();
+        if (!connected) {
+            console.log(`Connection attempt failed. ${retries - 1} retries remaining...`);
+            retries--;
+            if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
+    }
+
+    if (!connected) {
+        console.error('Failed to connect to MongoDB after multiple attempts');
         process.exit(1);
-    });
+    }
 
-// Handle MongoDB connection events
-mongoose.connection.on('error', err => {
-    console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
-});
-
-mongoose.connection.on('reconnected', () => {
-    console.log('MongoDB reconnected');
-});
-
-// Start server function
-const startServer = () => {
     const PORT = process.env.PORT || 5000;
-    const server = app.listen(PORT, () => {
+    server = app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
 
-    // Configure server timeout
-    server.timeout = 30000; // 30 seconds timeout
+    server.timeout = 30000;
 
-    // Handle server errors
     server.on('error', (error) => {
         console.error('Server error:', error);
         if (error.code === 'EADDRINUSE') {
@@ -131,21 +152,41 @@ const startServer = () => {
             }, 1000);
         }
     });
-
-    // Graceful shutdown
-    process.on('SIGINT', async () => {
-        try {
-            await mongoose.connection.close();
-            console.log('MongoDB connection closed through app termination');
-            server.close(() => {
-                console.log('Server closed');
-                process.exit(0);
-            });
-        } catch (err) {
-            console.error('Error during shutdown:', err);
-            process.exit(1);
-        }
-    });
 };
 
-startServer(); 
+// Handle MongoDB connection events
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected. Attempting to reconnect...');
+    setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+    console.log('MongoDB reconnected');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    try {
+        if (server) {
+            server.close(() => {
+                console.log('Server closed');
+            });
+        }
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed');
+        process.exit(0);
+    } catch (err) {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+    }
+});
+
+// Start the server
+startServer().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+}); 

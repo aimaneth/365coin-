@@ -43,19 +43,35 @@ api.interceptors.response.use(
         return response;
     },
     async (error) => {
-        const { config } = error;
+        const { config, response } = error;
         
-        // If config is undefined or we've already retried, reject
-        if (!config || !config.retry) {
+        // Handle 503 Service Unavailable specifically
+        if (response?.status === 503) {
+            // If database is not ready, wait longer before retry
+            const backoff = Math.min((config.retryCount || 0) + 1, 3) * 3000; // 3, 6, 9 seconds
+            config.retryDelay = backoff;
+            
+            console.log(`Database not ready, retrying in ${backoff/1000} seconds...`);
+            
+            // If we haven't retried too many times, try again
+            if (!config.retryCount || config.retryCount < 3) {
+                config.retryCount = (config.retryCount || 0) + 1;
+                
+                await new Promise(resolve => setTimeout(resolve, backoff));
+                return api(config);
+            }
+        }
+        
+        // If config is undefined or we've already retried maximum times, reject
+        if (!config || config.retryCount >= config.retry) {
             return Promise.reject(error);
         }
 
-        // Set the retry count
+        // For other errors, use standard retry logic
         config.retryCount = config.retryCount || 0;
-
+        
         // Check if we should retry the request
         if (config.retryCount >= config.retry) {
-            // We've run out of retries
             return Promise.reject(error);
         }
 
