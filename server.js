@@ -99,7 +99,14 @@ const mongoOptions = {
     retryReads: true,
     family: 4,
     autoIndex: true,
-    connectTimeoutMS: 30000
+    connectTimeoutMS: 30000,
+    ssl: true,
+    tls: true,
+    tlsAllowInvalidCertificates: false,
+    tlsAllowInvalidHostnames: false,
+    directConnection: false,
+    replicaSet: 'atlas-11gkgh-shard-0',
+    authSource: 'admin'
 };
 
 let server;
