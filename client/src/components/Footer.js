@@ -27,9 +27,6 @@ const Footer = () => {
                             <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" className="social-link">
                                 <FaDiscord size={20} />
                             </a>
-                            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                                <FaGithub size={20} />
-                            </a>
                         </div>
                     </div>
 
