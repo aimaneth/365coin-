@@ -75,105 +75,77 @@ app.use((err, req, res, next) => {
 const mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 15000, // Increased timeout for server selection
-    socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-    connectTimeoutMS: 15000, // Increased timeout for initial connection
-    maxPoolSize: 50, // Maintain up to 50 socket connections
-    minPoolSize: 10, // Maintain at least 10 socket connections
-    maxIdleTimeMS: 30000, // Close idle connections after 30 seconds
-    retryWrites: true, // Enable retrying write operations
-    retryReads: true, // Enable retrying read operations
-    family: 4 // Force IPv4
+    serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
+    heartbeatFrequencyMS: 2000,    // Check server status every 2 seconds
+    socketTimeoutMS: 45000,        // Close sockets after 45 seconds of inactivity
+    maxPoolSize: 50,               // Maintain up to 50 socket connections
+    minPoolSize: 10,               // Maintain at least 10 socket connections
+    maxIdleTimeMS: 30000,          // Close idle connections after 30 seconds
+    retryWrites: true,             // Enable retrying write operations
+    retryReads: true,              // Enable retrying read operations
+    family: 4                      // Force IPv4
 };
 
-// Connect to MongoDB with retry mechanism
-const connectWithRetry = async () => {
-    const maxRetries = 5; // Increased retries
-    let retries = 0;
-    let connected = false;
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, mongoOptions)
+    .then(() => {
+        console.log('Connected to MongoDB');
+        startServer();
+    })
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
+    });
 
-    while (retries < maxRetries && !connected) {
-        try {
-            console.log(`MongoDB connection attempt ${retries + 1}/${maxRetries}`);
-            await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
-            console.log('Connected to MongoDB');
-            connected = true;
+// Handle MongoDB connection events
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+});
 
-            // Set up connection event handlers
-            mongoose.connection.on('error', err => {
-                console.error('MongoDB connection error:', err);
-                if (!connected) {
-                    setTimeout(() => connectWithRetry(), 5000);
-                }
-            });
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+});
 
-            mongoose.connection.on('disconnected', () => {
-                console.log('MongoDB disconnected. Attempting to reconnect...');
-                if (!connected) {
-                    setTimeout(() => connectWithRetry(), 5000);
-                }
-            });
+mongoose.connection.on('reconnected', () => {
+    console.log('MongoDB reconnected');
+});
 
-            // Graceful shutdown
-            process.on('SIGINT', async () => {
-                try {
-                    await mongoose.connection.close();
-                    console.log('MongoDB connection closed through app termination');
-                    process.exit(0);
-                } catch (err) {
-                    console.error('Error during MongoDB shutdown:', err);
-                    process.exit(1);
-                }
-            });
+// Start server function
+const startServer = () => {
+    const PORT = process.env.PORT || 5000;
+    const server = app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 
-        } catch (err) {
-            retries++;
-            console.error(`MongoDB connection attempt ${retries} failed:`, err);
-            if (retries === maxRetries) {
-                console.error('Failed to connect to MongoDB after maximum retries');
-                process.exit(1);
-            }
-            // Wait before retrying (exponential backoff with max delay of 10 seconds)
-            const delay = Math.min(Math.pow(2, retries) * 1000, 10000);
-            await new Promise(resolve => setTimeout(resolve, delay));
+    // Configure server timeout
+    server.timeout = 30000; // 30 seconds timeout
+
+    // Handle server errors
+    server.on('error', (error) => {
+        console.error('Server error:', error);
+        if (error.code === 'EADDRINUSE') {
+            console.log('Address in use, retrying...');
+            setTimeout(() => {
+                server.close();
+                server.listen(PORT);
+            }, 1000);
         }
-    }
-    return connected;
-};
+    });
 
-// Start server only after MongoDB connection is established
-const startServer = async () => {
-    try {
-        const connected = await connectWithRetry();
-        if (!connected) {
-            console.error('Could not establish MongoDB connection. Exiting...');
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+        try {
+            await mongoose.connection.close();
+            console.log('MongoDB connection closed through app termination');
+            server.close(() => {
+                console.log('Server closed');
+                process.exit(0);
+            });
+        } catch (err) {
+            console.error('Error during shutdown:', err);
             process.exit(1);
         }
-
-        const PORT = process.env.PORT || 5000;
-        const server = app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-
-        // Configure server timeout
-        server.timeout = 30000; // 30 seconds timeout
-
-        // Handle server errors
-        server.on('error', (error) => {
-            console.error('Server error:', error);
-            if (error.code === 'EADDRINUSE') {
-                console.log('Address in use, retrying...');
-                setTimeout(() => {
-                    server.close();
-                    server.listen(PORT);
-                }, 1000);
-            }
-        });
-
-    } catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-    }
+    });
 };
 
 startServer(); 
