@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './api/auth/routes.js';
+import dbCheck from './middleware/dbCheck.js';
 
 dotenv.config();
 
@@ -29,15 +30,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Database connection check middleware
-app.use((req, res, next) => {
-    if (mongoose.connection.readyState !== 1) {
-        return res.status(503).json({
-            message: 'Database connection not ready. Please try again.',
-            readyState: mongoose.connection.readyState
-        });
-    }
-    next();
-});
+app.use(dbCheck);
 
 // Debug middleware
 app.use((req, res, next) => {
@@ -90,76 +83,24 @@ const mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 30000,
-    heartbeatFrequencyMS: 2000,
     socketTimeoutMS: 45000,
     maxPoolSize: 50,
-    minPoolSize: 10,
-    maxIdleTimeMS: 30000,
-    retryWrites: true,
-    retryReads: true,
-    family: 4,
-    autoIndex: true,
-    connectTimeoutMS: 30000,
-    ssl: true,
-    tls: true,
-    tlsAllowInvalidCertificates: false,
-    tlsAllowInvalidHostnames: false,
-    directConnection: false,
-    replicaSet: 'atlas-11gkgh-shard-0',
-    authSource: 'admin'
+    minPoolSize: 10
 };
 
-let server;
-
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
+// Connect to MongoDB and start server
+mongoose.connect(process.env.MONGODB_URI, mongoOptions)
+    .then(() => {
         console.log('MongoDB connected successfully');
-        return true;
-    } catch (err) {
+        const PORT = process.env.PORT || 5000;
+        server = app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
         console.error('MongoDB connection error:', err);
-        return false;
-    }
-};
-
-const startServer = async () => {
-    let retries = 5;
-    let connected = false;
-
-    while (retries > 0 && !connected) {
-        connected = await connectDB();
-        if (!connected) {
-            console.log(`Connection attempt failed. ${retries - 1} retries remaining...`);
-            retries--;
-            if (retries > 0) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-            }
-        }
-    }
-
-    if (!connected) {
-        console.error('Failed to connect to MongoDB after multiple attempts');
         process.exit(1);
-    }
-
-    const PORT = process.env.PORT || 5000;
-    server = app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
     });
-
-    server.timeout = 30000;
-
-    server.on('error', (error) => {
-        console.error('Server error:', error);
-        if (error.code === 'EADDRINUSE') {
-            console.log('Address in use, retrying...');
-            setTimeout(() => {
-                server.close();
-                server.listen(PORT);
-            }, 1000);
-        }
-    });
-};
 
 // Handle MongoDB connection events
 mongoose.connection.on('error', err => {
@@ -167,12 +108,11 @@ mongoose.connection.on('error', err => {
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected. Attempting to reconnect...');
-    setTimeout(connectDB, 5000);
+    console.log('MongoDB disconnected');
 });
 
-mongoose.connection.on('reconnected', () => {
-    console.log('MongoDB reconnected');
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB connected');
 });
 
 // Graceful shutdown
@@ -190,10 +130,4 @@ process.on('SIGINT', async () => {
         console.error('Error during shutdown:', err);
         process.exit(1);
     }
-});
-
-// Start the server
-startServer().catch(err => {
-    console.error('Failed to start server:', err);
-    process.exit(1);
 }); 
