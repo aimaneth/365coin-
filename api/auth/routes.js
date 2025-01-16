@@ -3,6 +3,7 @@ import { User } from '../models/User.js';
 import { auth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -12,11 +13,32 @@ router.post('/signup', async (req, res) => {
     console.log('Received signup request:', req.body); // Debug log
     const { username, email, password } = req.body;
 
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB not connected. Current state:', mongoose.connection.readyState);
+      return res.status(503).json({
+        message: 'Database connection not ready. Please try again.'
+      });
+    }
+
+    // Check JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET not configured');
+      return res.status(500).json({
+        message: 'Server configuration error'
+      });
+    }
+
     // Validate input
     if (!username || !email || !password) {
       console.log('Missing required fields:', { username: !!username, email: !!email, password: !!password }); // Debug log
       return res.status(400).json({ 
-        message: 'All fields are required' 
+        message: 'All fields are required',
+        details: {
+          username: !username ? 'Username is required' : null,
+          email: !email ? 'Email is required' : null,
+          password: !password ? 'Password is required' : null
+        }
       });
     }
 
@@ -29,7 +51,7 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Check password length
+    // Check password length and complexity
     if (password.length < 6) {
       console.log('Password too short:', password.length); // Debug log
       return res.status(400).json({ 
@@ -37,27 +59,64 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Check for existing user
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
-    });
-
-    if (existingUser) {
-      console.log('User already exists:', { 
-        existingEmail: existingUser.email === email, 
-        existingUsername: existingUser.username === username 
-      }); // Debug log
-      return res.status(400).json({ 
-        message: existingUser.email === email ? 
-          'Email already registered' : 
-          'Username already taken' 
+    // Check username length and format
+    if (username.length < 3 || username.length > 30) {
+      return res.status(400).json({
+        message: 'Username must be between 3 and 30 characters'
       });
     }
 
-    console.log('Creating new user:', { username, email }); // Debug log
-    const user = new User({ username, email, password });
-    await user.save();
-    const token = await user.generateAuthToken();
+    // Check for existing user with more detailed error
+    try {
+      const existingUser = await User.findOne({ 
+        $or: [{ email }, { username }] 
+      });
+
+      if (existingUser) {
+        console.log('User already exists:', { 
+          existingEmail: existingUser.email === email, 
+          existingUsername: existingUser.username === username 
+        }); // Debug log
+        return res.status(400).json({ 
+          message: existingUser.email === email ? 
+            'Email already registered' : 
+            'Username already taken',
+          field: existingUser.email === email ? 'email' : 'username'
+        });
+      }
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return res.status(500).json({
+        message: 'Error checking existing user',
+        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
+    }
+
+    // Create user with error handling
+    let user;
+    try {
+      console.log('Creating new user:', { username, email }); // Debug log
+      user = new User({ username, email, password });
+      await user.save();
+    } catch (saveError) {
+      console.error('Error saving user:', saveError);
+      return res.status(500).json({
+        message: 'Error creating user account',
+        error: process.env.NODE_ENV === 'development' ? saveError.message : undefined
+      });
+    }
+
+    // Generate token with error handling
+    let token;
+    try {
+      token = await user.generateAuthToken();
+    } catch (tokenError) {
+      console.error('Error generating token:', tokenError);
+      return res.status(500).json({
+        message: 'Error generating authentication token',
+        error: process.env.NODE_ENV === 'development' ? tokenError.message : undefined
+      });
+    }
 
     console.log('User created successfully:', user._id); // Debug log
     res.status(201).json({ 
@@ -68,7 +127,7 @@ router.post('/signup', async (req, res) => {
     console.error('Detailed signup error:', error); // Debug log
     res.status(500).json({ 
       message: 'Error creating user', 
-      error: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
