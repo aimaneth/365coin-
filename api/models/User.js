@@ -46,23 +46,40 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-    if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 10);
+    try {
+        console.log('Pre-save middleware triggered for user:', this._id || 'new user');
+        if (this.isModified('password')) {
+            console.log('Password modified, hashing...');
+            this.password = await bcrypt.hash(this.password, 10);
+            console.log('Password hashed successfully');
+        }
+        next();
+    } catch (error) {
+        console.error('Error in pre-save middleware:', error);
+        next(error);
     }
-    next();
 });
 
 // Generate auth token
 userSchema.methods.generateAuthToken = function() {
-    return jwt.sign(
-        { userId: this._id },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-    );
+    try {
+        console.log('Generating auth token for user:', this._id);
+        const token = jwt.sign(
+            { userId: this._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        console.log('Auth token generated successfully');
+        return token;
+    } catch (error) {
+        console.error('Error generating auth token:', error);
+        throw error;
+    }
 };
 
 // Remove sensitive data when converting to JSON
 userSchema.methods.toJSON = function() {
+    console.log('Converting user to JSON:', this._id);
     const user = this.toObject();
     delete user.password;
     return user;
