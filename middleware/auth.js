@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const auth = async (req, res, next) => {
     // Check database connection
@@ -27,4 +27,4 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth; 
+export default auth; 

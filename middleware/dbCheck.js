@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const dbCheck = (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {
@@ -17,4 +17,4 @@ const dbCheck = (req, res, next) => {
     next();
 };
 
-module.exports = dbCheck; 
+export default dbCheck; 
