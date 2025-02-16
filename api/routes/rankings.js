@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
     try {
         // Check database connection
         if (mongoose.connection.readyState !== 1) {
+            console.error('Database not connected. State:', mongoose.connection.readyState);
             return res.status(503).json({
                 success: false,
                 message: 'Database connection not ready',
@@ -17,57 +18,73 @@ router.get('/', async (req, res) => {
             });
         }
 
-        // Debug: Check if we have users
+        // Debug: Log collection names
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        console.log('Available collections:', collections.map(c => c.name));
+
+        // Debug: Check if we have users and trades
         const userCount = await User.countDocuments();
-        console.log('Total users in database:', userCount);
-
-        // Debug: Check if we have trades
         const tradeCount = await Trade.countDocuments();
-        console.log('Total trades in database:', tradeCount);
+        console.log(`Found ${userCount} users and ${tradeCount} trades`);
 
-        // Debug: Sample some trades to check structure
-        const sampleTrades = await Trade.find().limit(1);
-        console.log('Sample trade:', JSON.stringify(sampleTrades, null, 2));
+        // Debug: Get sample trade and user
+        const sampleTrade = await Trade.findOne();
+        const sampleUser = await User.findById(sampleTrade?.userId);
+        console.log('Sample trade:', sampleTrade);
+        console.log('Sample user:', sampleUser);
 
-        // Debug: Sample some users to check structure
-        const sampleUsers = await User.find().limit(1);
-        console.log('Sample user:', JSON.stringify(sampleUsers, null, 2));
-
-        // Aggregate trades to calculate total PnL and other stats for each trader
+        // Get all trades with user details
         const rankings = await Trade.aggregate([
             // Match only closed trades
-            {
-                $match: {
-                    status: 'closed'
-                }
+            { 
+                $match: { 
+                    status: 'closed',
+                    userId: { $exists: true, $ne: null }
+                } 
             },
+            
             // Group trades by userId
             {
                 $group: {
                     _id: '$userId',
-                    totalPnL: { $sum: '$pnl' },
+                    totalPnL: { $sum: { $ifNull: ['$pnl', 0] } },
                     totalTrades: { $sum: 1 },
                     winningTrades: {
-                        $sum: { $cond: [{ $gt: ['$pnl', 0] }, 1, 0] }
+                        $sum: { 
+                            $cond: [{ $gt: [{ $ifNull: ['$pnl', 0] }, 0] }, 1, 0] 
+                        }
                     },
-                    averagePnL: { $avg: '$pnl' },
                     totalVolume: {
-                        $sum: { $multiply: ['$amount', '$price'] }
+                        $sum: { 
+                            $multiply: [
+                                { $ifNull: ['$amount', 0] }, 
+                                { $ifNull: ['$entryPrice', 0] }
+                            ] 
+                        }
                     },
-                    lastTrade: { $max: '$closedAt' }
+                    lastTrade: { $max: '$closedAt' },
+                    trades: { $push: '$$ROOT' }
                 }
             },
-            // Calculate win rate and other derived stats
+            
+            // Calculate win rate
             {
                 $addFields: {
                     winRate: {
                         $multiply: [
-                            { $divide: ['$winningTrades', '$totalTrades'] },
+                            {
+                                $cond: [
+                                    { $eq: ['$totalTrades', 0] },
+                                    0,
+                                    { $divide: ['$winningTrades', '$totalTrades'] }
+                                ]
+                            },
                             100
                         ]
                     }
                 }
             },
+            
             // Look up user details
             {
                 $lookup: {
@@ -77,46 +94,61 @@ router.get('/', async (req, res) => {
                     as: 'user'
                 }
             },
-            // Debug: Log the state after lookup
+            
+            // Filter out traders with no user data
             {
-                $addFields: {
-                    debug_hasUser: { $size: '$user' }
+                $match: {
+                    'user.0': { $exists: true }
                 }
             },
+            
             // Unwind the user array
             { $unwind: '$user' },
+            
             // Project final fields
             {
                 $project: {
                     username: '$user.username',
                     walletAddress: { $arrayElemAt: ['$user.walletAddresses.address', 0] },
-                    totalPnL: 1,
+                    totalPnL: { $round: ['$totalPnL', 2] },
                     totalTrades: 1,
-                    winRate: 1,
-                    averagePnL: 1,
-                    totalVolume: 1,
-                    lastTrade: 1,
-                    debug_hasUser: 1
+                    winRate: { $round: ['$winRate', 2] },
+                    totalVolume: { $round: ['$totalVolume', 2] },
+                    lastTrade: 1
                 }
             },
+            
             // Sort by total PnL descending
             { $sort: { totalPnL: -1 } }
         ]);
 
         console.log('Rankings before formatting:', JSON.stringify(rankings, null, 2));
 
+        if (!rankings || rankings.length === 0) {
+            console.log('No rankings found after aggregation');
+            return res.json({
+                success: true,
+                rankings: [],
+                debug: {
+                    userCount,
+                    tradeCount,
+                    rankingsCount: 0,
+                    message: 'No rankings found'
+                }
+            });
+        }
+
         // Format the response
         const formattedRankings = rankings.map((trader, index) => ({
             rank: index + 1,
-            username: trader.username,
-            walletAddress: trader.walletAddress,
+            username: trader.username || 'Unknown Trader',
+            walletAddress: trader.walletAddress || 'No Address',
             stats: {
-                totalPnL: parseFloat(trader.totalPnL.toFixed(2)),
-                totalTrades: trader.totalTrades,
-                winRate: parseFloat(trader.winRate.toFixed(2)),
-                averagePnL: parseFloat(trader.averagePnL.toFixed(2)),
-                totalVolume: parseFloat(trader.totalVolume.toFixed(2)),
-                lastActive: trader.lastTrade
+                totalPnL: trader.totalPnL || 0,
+                totalTrades: trader.totalTrades || 0,
+                winRate: trader.winRate || 0,
+                totalVolume: trader.totalVolume || 0,
+                lastActive: trader.lastTrade || new Date()
             }
         }));
 
@@ -125,14 +157,21 @@ router.get('/', async (req, res) => {
         // Send response
         res.json({
             success: true,
-            rankings: formattedRankings
+            rankings: formattedRankings,
+            debug: {
+                userCount,
+                tradeCount,
+                rankingsCount: rankings.length,
+                collections: collections.map(c => c.name)
+            }
         });
     } catch (error) {
         console.error('Error fetching rankings:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching trader rankings',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
