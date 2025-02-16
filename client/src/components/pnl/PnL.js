@@ -9,6 +9,7 @@ import TradingGraph from './TradingGraph';
 import TradeHistory from './TradeHistory';
 import './PnL.css';
 import './TraderDetails.css';
+import api from '../../config/axios';
 
 const PnL = () => {
     const [timeframe, setTimeframe] = useState('24h');
@@ -18,6 +19,9 @@ const PnL = () => {
     const [selectedTrader, setSelectedTrader] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [performanceData, setPerformanceData] = useState(null);
+    const [rankings, setRankings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Mock data - replace with API calls
     const traders = [
@@ -171,6 +175,55 @@ const PnL = () => {
         }, 1000);
     };
 
+    useEffect(() => {
+        const fetchRankings = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get('/api/rankings');
+                if (response.data.success) {
+                    setRankings(response.data.rankings);
+                }
+            } catch (err) {
+                console.error('Error fetching rankings:', err);
+                setError('Failed to load trader rankings');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRankings();
+    }, []);
+
+    const formatAddress = (address) => {
+        if (!address) return '';
+        return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    };
+
+    const formatNumber = (num) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(num);
+    };
+
+    const formatVolume = (volume) => {
+        if (volume >= 1000000) {
+            return `$${(volume / 1000000).toFixed(2)}M`;
+        } else if (volume >= 1000) {
+            return `$${(volume / 1000).toFixed(2)}K`;
+        }
+        return `$${volume.toFixed(2)}`;
+    };
+
+    if (loading) {
+        return <div className="pnl-loading">Loading rankings...</div>;
+    }
+
+    if (error) {
+        return <div className="pnl-error">{error}</div>;
+    }
+
     return (
         <div className="pnl-container">
             {/* Header Section */}
@@ -232,64 +285,27 @@ const PnL = () => {
                     {/* Rankings Table */}
                     <div className="rankings-table">
                         <div className="table-header">
-                            <div className="th">Rank</div>
-                            <div className="th">Trader</div>
-                            <div className="th">PnL</div>
-                            <div className="th">Volume</div>
-                            <div className="th">Win Rate</div>
+                            <div className="rank-col">Rank</div>
+                            <div className="trader-col">Trader</div>
+                            <div className="pnl-col">Total PnL</div>
+                            <div className="trades-col">Trades</div>
+                            <div className="winrate-col">Win Rate</div>
+                            <div className="volume-col">Volume</div>
                         </div>
                         <div className="table-body">
-                            {traders.map((trader, index) => (
-                                <div 
-                                    key={trader.id}
-                                    className={`table-row ${selectedTrader?.id === trader.id ? 'selected' : ''}`}
-                                    onClick={() => handleTraderSelect(trader)}
-                                >
-                                    <div className="td rank">
-                                        {index < 3 ? (
-                                            <div className="rank-badge">
-                                                {index === 0 ? (
-                                                    <FaCrown style={{ color: '#FFD700' }} data-tooltip="Top Trader" />
-                                                ) : index === 1 ? (
-                                                    <FaMedal style={{ color: '#C0C0C0' }} data-tooltip="Runner Up" />
-                                                ) : (
-                                                    <FaMedal style={{ color: '#CD7F32' }} data-tooltip="Third Place" />
-                                                )}
-                                            </div>
-                                        ) : null}
-                                        <span className="rank-number">#{index + 1}</span>
-                                        <span className="trader-avatar" data-tooltip={`Trader Level ${Math.floor(Math.random() * 50) + 1}`}>
-                                            {trader.avatar}
-                                        </span>
-                                    </div>
-                                    <div className="td trader-info">
+                            {rankings.map((trader) => (
+                                <div key={trader.walletAddress} className="table-row">
+                                    <div className="rank-col">#{trader.rank}</div>
+                                    <div className="trader-col">
                                         <span className="trader-name">{trader.username}</span>
-                                        <span className="trader-address">
-                                            <FaWallet />
-                                            {trader.address}
-                                        </span>
+                                        <span className="trader-address">{formatAddress(trader.walletAddress)}</span>
                                     </div>
-                                    <div className="td pnl">
-                                        <span className={`pnl-value ${(trader.stats[timeframe]?.pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
-                                            {(trader.stats[timeframe]?.pnl || 0) >= 0 ? '+' : '-'}
-                                            ${Math.abs(trader.stats[timeframe]?.pnl || 0).toLocaleString()}
-                                        </span>
-                                        <span className="pnl-percentage">
-                                            {trader.stats[timeframe]?.pnlPercentage || 0}%
-                                        </span>
+                                    <div className={`pnl-col ${trader.stats.totalPnL >= 0 ? 'positive' : 'negative'}`}>
+                                        ${formatNumber(Math.abs(trader.stats.totalPnL))}
                                     </div>
-                                    <div className="td volume">
-                                        ${(trader.stats[timeframe]?.volume || 0).toLocaleString()}
-                                    </div>
-                                    <div className="td win-rate">
-                                        <div className="win-rate-bar">
-                                            <div 
-                                                className="win-rate-fill"
-                                                style={{ width: `${trader.stats[timeframe]?.winRate || 0}%` }}
-                                            />
-                                        </div>
-                                        <span>{trader.stats[timeframe]?.winRate || 0}%</span>
-                                    </div>
+                                    <div className="trades-col">{trader.stats.totalTrades}</div>
+                                    <div className="winrate-col">{trader.stats.winRate}%</div>
+                                    <div className="volume-col">{formatVolume(trader.stats.totalVolume)}</div>
                                 </div>
                             ))}
                         </div>

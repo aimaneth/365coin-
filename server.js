@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './api/auth/routes.js';
+import rankingsRoutes from './api/routes/rankings.js';
 import dbCheck from './middleware/dbCheck.js';
 
 dotenv.config();
@@ -58,6 +59,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/rankings', rankingsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

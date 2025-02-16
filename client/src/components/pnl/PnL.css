@@ -6,10 +6,16 @@
 
 /* Container */
 .pnl-container {
-    padding: 100px 32px 32px;
-    min-height: 100vh;
-    background: linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(28, 28, 28, 0.95) 100%);
-    overflow-x: hidden;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.pnl-container h1 {
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 2rem;
+    text-align: center;
 }
 
 /* Header Section */
@@ -194,103 +200,97 @@
 
 /* Rankings Table */
 .rankings-table {
-    flex: 1;
-    overflow-y: auto;
-    margin: 0 -24px;
-    padding: 0 24px;
-    height: calc(100% - 100px);
-    position: relative;
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
 }
 
-.rankings-table .table-header {
+.table-header {
     display: grid;
-    grid-template-columns: 100px minmax(200px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 1fr);
-    padding: 16px 24px;
-    background: rgba(28, 28, 28, 0.95);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    backdrop-filter: blur(10px);
-    width: 100%;
-}
-
-.rankings-table .th {
-    color: var(--text-secondary);
-    font-size: 12px;
+    grid-template-columns: 80px 2fr 1fr 1fr 1fr 1fr;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
+    color: var(--text-secondary);
 }
 
-.rankings-table .table-body {
-    max-height: calc(100vh - 400px);
+.table-body {
+    max-height: 600px;
     overflow-y: auto;
-    padding-bottom: 24px;
 }
 
-.rankings-table .table-row {
+.table-row {
     display: grid;
-    grid-template-columns: 100px minmax(200px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 1fr);
-    padding: 16px 24px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    grid-template-columns: 80px 2fr 1fr 1fr 1fr 1fr;
+    padding: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    position: relative;
-    align-items: center;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
 }
 
-.rankings-table .table-row:hover {
-    background: rgba(255, 255, 255, 0.04);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.table-row:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.rankings-table .table-row.selected {
-    background: rgba(240, 192, 0, 0.05);
-    border-color: var(--primary);
-    box-shadow: 0 4px 20px rgba(240, 192, 0, 0.1);
+.rank-col {
+    font-weight: 600;
+    color: var(--text);
 }
 
-/* Table Columns */
-.rankings-table .td {
+.trader-col {
     display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.trader-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.trader-address {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+}
+
+.pnl-col {
+    font-weight: 600;
+}
+
+.pnl-col.positive {
+    color: var(--success);
+}
+
+.pnl-col.negative {
+    color: var(--error);
+}
+
+.trades-col,
+.winrate-col,
+.volume-col {
+    color: var(--text);
+}
+
+.pnl-loading {
+    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    min-height: 400px;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
 }
 
-.rankings-table .td.rank {
-    position: relative;
-    padding-left: 8px;
-}
-
-.rankings-table .td.trader-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-}
-
-.rankings-table .td.pnl {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-}
-
-.rankings-table .td.volume {
-    justify-content: flex-start;
-}
-
-.rankings-table .td.win-rate {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+.pnl-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    color: var(--error);
+    font-size: 1.125rem;
+    text-align: center;
+    padding: 2rem;
 }
 
 /* Rank and Badge */
@@ -393,6 +393,18 @@
     }
 }
 
+@media (max-width: 1024px) {
+    .pnl-container {
+        padding: 1rem;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 60px 2fr 1fr 1fr 1fr 1fr;
+        font-size: 0.875rem;
+    }
+}
+
 @media (max-width: 768px) {
     .pnl-container {
         padding: 80px 16px 16px;
@@ -426,37 +438,13 @@
         max-width: 100%;
     }
 
-    .rankings-table {
-        margin: 0 -16px;
-        padding: 0 16px;
-        height: calc(100vh - 350px);
+    .table-header,
+    .table-row {
+        grid-template-columns: 50px 2fr 1fr 1fr 1fr;
     }
 
-    .rankings-table .table-header,
-    .rankings-table .table-row {
-        grid-template-columns: 70px 1fr 100px 100px;
-        padding: 12px;
-        gap: 8px;
-    }
-
-    .rankings-table .th {
-        font-size: 11px;
-        letter-spacing: 0.5px;
-    }
-
-    .rankings-table .td {
-        font-size: 13px;
-        gap: 6px;
-    }
-
-    .rankings-table .td.volume,
-    .rankings-table .th:nth-child(4),
-    .rankings-table .td:nth-child(4) {
+    .volume-col {
         display: none;
-    }
-
-    .rankings-table .table-body {
-        max-height: calc(100vh - 450px);
     }
 
     .rank-number {
@@ -499,20 +487,22 @@
         padding-top: 24px;
     }
 
-    .rankings-table .table-header,
-    .rankings-table .table-row {
-        grid-template-columns: 60px 1fr 90px 90px;
-        padding: 10px;
-        gap: 6px;
+    .table-header,
+    .table-row {
+        grid-template-columns: 40px 2fr 1fr 1fr;
+        padding: 0.75rem;
     }
 
-    .rankings-table .th {
-        font-size: 10px;
+    .winrate-col {
+        display: none;
     }
 
-    .rankings-table .td {
-        font-size: 12px;
-        gap: 4px;
+    .trader-name {
+        font-size: 0.875rem;
+    }
+
+    .trader-address {
+        font-size: 0.75rem;
     }
 
     .rank-number {
