@@ -23,14 +23,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        trim: true
+        trim: true,
+        index: true
     },
     email: {
         type: String,
         required: true,
         unique: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        index: true
     },
     password: {
         type: String,
@@ -42,6 +44,9 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
+}, {
+    collection: 'users', // Explicitly set collection name
+    timestamps: true
 });
 
 // Hash password before saving
@@ -84,6 +89,10 @@ userSchema.methods.toJSON = function() {
     delete user.password;
     return user;
 };
+
+// Add indexes for better query performance
+userSchema.index({ username: 1, email: 1 });
+userSchema.index({ 'walletAddresses.address': 1 });
 
 export const User = mongoose.model('User', userSchema);
 export default User; 

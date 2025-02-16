@@ -29,8 +29,18 @@ router.get('/', async (req, res) => {
         const sampleTrades = await Trade.find().limit(1);
         console.log('Sample trade:', JSON.stringify(sampleTrades, null, 2));
 
+        // Debug: Sample some users to check structure
+        const sampleUsers = await User.find().limit(1);
+        console.log('Sample user:', JSON.stringify(sampleUsers, null, 2));
+
         // Aggregate trades to calculate total PnL and other stats for each trader
         const rankings = await Trade.aggregate([
+            // Match only closed trades
+            {
+                $match: {
+                    status: 'closed'
+                }
+            },
             // Group trades by userId
             {
                 $group: {
@@ -85,7 +95,8 @@ router.get('/', async (req, res) => {
                     winRate: 1,
                     averagePnL: 1,
                     totalVolume: 1,
-                    lastTrade: 1
+                    lastTrade: 1,
+                    debug_hasUser: 1
                 }
             },
             // Sort by total PnL descending

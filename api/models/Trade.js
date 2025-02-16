@@ -64,6 +64,7 @@ const tradeSchema = new mongoose.Schema({
         index: true
     }
 }, {
+    collection: 'trades',
     timestamps: true
 });
 
@@ -90,6 +91,14 @@ tradeSchema.statics.calculateStats = async function(userId) {
     ]);
     return stats[0] || null;
 };
+
+// Add pre-save middleware to ensure proper ObjectId conversion
+tradeSchema.pre('save', function(next) {
+    if (this.userId && typeof this.userId === 'string') {
+        this.userId = new mongoose.Types.ObjectId(this.userId);
+    }
+    next();
+});
 
 export const Trade = mongoose.model('Trade', tradeSchema);
 export default Trade; 
