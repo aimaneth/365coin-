@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL,
+    baseURL: process.env.REACT_APP_API_URL || 'https://three65coin-backend.onrender.com',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: false,
+    withCredentials: true,
     timeout: 30000, // Increased timeout to 30 seconds
     timeoutErrorMessage: 'Request timed out. Please try again.',
     // Add retry configuration
@@ -30,6 +30,9 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Add CORS headers
+        config.headers['Access-Control-Allow-Origin'] = '*';
         return config;
     },
     (error) => {

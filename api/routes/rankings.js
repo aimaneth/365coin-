@@ -1,12 +1,32 @@
 import express from 'express';
 import { Trade } from '../models/Trade.js';
 import { User } from '../models/User.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
 // Get trader rankings
 router.get('/', async (req, res) => {
     try {
+        // Set CORS headers
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        // Handle preflight request
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+
+        // Check database connection
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                success: false,
+                message: 'Database connection not ready',
+                readyState: mongoose.connection.readyState
+            });
+        }
+
         // Aggregate trades to calculate total PnL and other stats for each trader
         const rankings = await Trade.aggregate([
             // Group trades by userId
@@ -79,6 +99,11 @@ router.get('/', async (req, res) => {
             }
         }));
 
+        // Send response with cache control headers
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        
         res.json({
             success: true,
             rankings: formattedRankings
