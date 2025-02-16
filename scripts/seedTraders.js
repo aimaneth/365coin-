@@ -133,11 +133,16 @@ const generateTrade = (userId, walletAddress, successRate, date) => {
         (type === 'buy' ? entryPrice * (1 + priceChange) : entryPrice * (1 - priceChange)) :
         (type === 'buy' ? entryPrice * (1 - priceChange) : entryPrice * (1 + priceChange));
 
+    // Calculate PnL
     const pnl = type === 'buy' ? 
         (exitPrice - entryPrice) * amount :
         (entryPrice - exitPrice) * amount;
 
     const pnlPercentage = (pnl / (entryPrice * amount)) * 100;
+
+    // Ensure the trade has a status and proper timestamps
+    const openedAt = date;
+    const closedAt = new Date(date.getTime() + random(1, 24) * 60 * 60 * 1000);
 
     return {
         userId,
@@ -150,8 +155,8 @@ const generateTrade = (userId, walletAddress, successRate, date) => {
         pnl,
         pnlPercentage,
         status: 'closed',
-        openedAt: date,
-        closedAt: new Date(date.getTime() + random(1, 24) * 60 * 60 * 1000),
+        openedAt,
+        closedAt,
         network: 'BSC',
         walletAddress
     };
@@ -181,15 +186,17 @@ const seedTraders = async () => {
                 ...trader,
                 password: hashedPassword
             });
+            console.log(`Created trader: ${trader.username}`);
 
             // Generate trades
             const trades = [];
             const startDate = trader.walletAddresses[0].dateAdded;
             const endDate = new Date();
             
+            // Generate trades with proper spacing
             for (let i = 0; i < trader.tradeCount; i++) {
                 const tradeDate = new Date(
-                    startDate.getTime() + random(0, endDate.getTime() - startDate.getTime())
+                    startDate.getTime() + (i * (endDate.getTime() - startDate.getTime()) / trader.tradeCount)
                 );
                 
                 trades.push(generateTrade(
@@ -203,9 +210,18 @@ const seedTraders = async () => {
             // Insert trades
             await Trade.insertMany(trades);
             console.log(`Created ${trades.length} trades for ${trader.username}`);
+
+            // Verify trades were created
+            const tradeCount = await Trade.countDocuments({ userId: newTrader._id });
+            console.log(`Verified ${tradeCount} trades for ${trader.username}`);
         }
 
         console.log('Traders and trades seeded successfully');
+
+        // Verify final counts
+        const userCount = await User.countDocuments();
+        const tradeCount = await Trade.countDocuments();
+        console.log(`Final counts - Users: ${userCount}, Trades: ${tradeCount}`);
 
         // Disconnect from MongoDB
         await mongoose.disconnect();

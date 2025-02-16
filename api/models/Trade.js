@@ -4,7 +4,8 @@ const tradeSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true,
+        index: true
     },
     type: {
         type: String,
@@ -32,7 +33,8 @@ const tradeSchema = new mongoose.Schema({
     },
     pnl: {
         type: Number,
-        default: 0
+        default: 0,
+        index: true
     },
     pnlPercentage: {
         type: Number,
@@ -45,10 +47,12 @@ const tradeSchema = new mongoose.Schema({
     },
     openedAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: true
     },
     closedAt: {
-        type: Date
+        type: Date,
+        index: true
     },
     network: {
         type: String,
@@ -56,9 +60,36 @@ const tradeSchema = new mongoose.Schema({
     },
     walletAddress: {
         type: String,
-        required: true
+        required: true,
+        index: true
     }
+}, {
+    timestamps: true
 });
+
+// Add compound index for userId and pnl for faster aggregation
+tradeSchema.index({ userId: 1, pnl: -1 });
+
+// Add method to calculate trade statistics
+tradeSchema.statics.calculateStats = async function(userId) {
+    const stats = await this.aggregate([
+        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+        {
+            $group: {
+                _id: '$userId',
+                totalPnL: { $sum: '$pnl' },
+                totalTrades: { $sum: 1 },
+                winningTrades: {
+                    $sum: { $cond: [{ $gt: ['$pnl', 0] }, 1, 0] }
+                },
+                totalVolume: {
+                    $sum: { $multiply: ['$amount', '$price'] }
+                }
+            }
+        }
+    ]);
+    return stats[0] || null;
+};
 
 export const Trade = mongoose.model('Trade', tradeSchema);
 export default Trade; 

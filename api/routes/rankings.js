@@ -17,6 +17,18 @@ router.get('/', async (req, res) => {
             });
         }
 
+        // Debug: Check if we have users
+        const userCount = await User.countDocuments();
+        console.log('Total users in database:', userCount);
+
+        // Debug: Check if we have trades
+        const tradeCount = await Trade.countDocuments();
+        console.log('Total trades in database:', tradeCount);
+
+        // Debug: Sample some trades to check structure
+        const sampleTrades = await Trade.find().limit(1);
+        console.log('Sample trade:', JSON.stringify(sampleTrades, null, 2));
+
         // Aggregate trades to calculate total PnL and other stats for each trader
         const rankings = await Trade.aggregate([
             // Group trades by userId
@@ -55,6 +67,12 @@ router.get('/', async (req, res) => {
                     as: 'user'
                 }
             },
+            // Debug: Log the state after lookup
+            {
+                $addFields: {
+                    debug_hasUser: { $size: '$user' }
+                }
+            },
             // Unwind the user array
             { $unwind: '$user' },
             // Project final fields
@@ -74,6 +92,8 @@ router.get('/', async (req, res) => {
             { $sort: { totalPnL: -1 } }
         ]);
 
+        console.log('Rankings before formatting:', JSON.stringify(rankings, null, 2));
+
         // Format the response
         const formattedRankings = rankings.map((trader, index) => ({
             rank: index + 1,
@@ -88,6 +108,8 @@ router.get('/', async (req, res) => {
                 lastActive: trader.lastTrade
             }
         }));
+
+        console.log('Final formatted rankings:', JSON.stringify(formattedRankings, null, 2));
 
         // Send response
         res.json({
