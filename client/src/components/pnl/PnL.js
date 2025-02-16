@@ -28,36 +28,36 @@ const PnL = () => {
             avatar: '🐋',
             stats: {
                 '24h': {
-                    pnl: 125000,
-                    pnlPercentage: 12.5,
-                    volume: 2500000,
-                    trades: 45,
-                    winRate: 78,
-                    totalValue: 1250000
+                    pnl: 185000,
+                    pnlPercentage: 18.5,
+                    volume: 3500000,
+                    trades: 52,
+                    winRate: 85,
+                    totalValue: 1850000
                 },
                 '7d': {
-                    pnl: 450000,
-                    pnlPercentage: 45.0,
-                    volume: 8500000,
-                    trades: 156,
-                    winRate: 82,
-                    totalValue: 1450000
+                    pnl: 650000,
+                    pnlPercentage: 65.0,
+                    volume: 12500000,
+                    trades: 186,
+                    winRate: 88,
+                    totalValue: 2150000
                 },
                 '30d': {
-                    pnl: 1250000,
-                    pnlPercentage: 125.0,
-                    volume: 25000000,
-                    trades: 589,
-                    winRate: 75,
-                    totalValue: 2250000
+                    pnl: 1850000,
+                    pnlPercentage: 185.0,
+                    volume: 35000000,
+                    trades: 689,
+                    winRate: 82,
+                    totalValue: 3250000
                 },
                 'ALL': {
-                    pnl: 5250000,
-                    pnlPercentage: 525.0,
-                    volume: 105000000,
-                    trades: 2456,
-                    winRate: 80,
-                    totalValue: 6250000
+                    pnl: 7500000,
+                    pnlPercentage: 750.0,
+                    volume: 145000000,
+                    trades: 2856,
+                    winRate: 85,
+                    totalValue: 8500000
                 }
             }
         },
@@ -68,36 +68,36 @@ const PnL = () => {
             avatar: '💎',
             stats: {
                 '24h': {
-                    pnl: 85000,
-                    pnlPercentage: 8.5,
-                    volume: 1500000,
-                    trades: 32,
-                    winRate: 72,
-                    totalValue: 950000
+                    pnl: 125000,
+                    pnlPercentage: 12.5,
+                    volume: 2800000,
+                    trades: 42,
+                    winRate: 82,
+                    totalValue: 1450000
                 },
                 '7d': {
-                    pnl: 320000,
-                    pnlPercentage: 32.0,
-                    volume: 6500000,
-                    trades: 123,
-                    winRate: 75,
-                    totalValue: 1150000
+                    pnl: 480000,
+                    pnlPercentage: 48.0,
+                    volume: 9500000,
+                    trades: 143,
+                    winRate: 84,
+                    totalValue: 1750000
                 },
                 '30d': {
-                    pnl: 950000,
-                    pnlPercentage: 95.0,
-                    volume: 19000000,
-                    trades: 432,
-                    winRate: 70,
-                    totalValue: 1850000
+                    pnl: 1450000,
+                    pnlPercentage: 145.0,
+                    volume: 28000000,
+                    trades: 532,
+                    winRate: 80,
+                    totalValue: 2650000
                 },
                 'ALL': {
-                    pnl: 3850000,
-                    pnlPercentage: 385.0,
-                    volume: 85000000,
-                    trades: 1876,
-                    winRate: 73,
-                    totalValue: 4850000
+                    pnl: 5800000,
+                    pnlPercentage: 580.0,
+                    volume: 115000000,
+                    trades: 2276,
+                    winRate: 82,
+                    totalValue: 6850000
                 }
             }
         },
