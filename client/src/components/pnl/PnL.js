@@ -100,8 +100,207 @@ const PnL = () => {
                     totalValue: 4850000
                 }
             }
+        },
+        {
+            id: 3,
+            username: 'AlphaTrader',
+            address: '0x456...def',
+            avatar: '🎯',
+            stats: {
+                '24h': {
+                    pnl: 65000,
+                    pnlPercentage: 6.5,
+                    volume: 1200000,
+                    trades: 28,
+                    winRate: 75,
+                    totalValue: 850000
+                },
+                '7d': {
+                    pnl: 280000,
+                    pnlPercentage: 28.0,
+                    volume: 5500000,
+                    trades: 98,
+                    winRate: 77,
+                    totalValue: 980000
+                },
+                '30d': {
+                    pnl: 820000,
+                    pnlPercentage: 82.0,
+                    volume: 16000000,
+                    trades: 385,
+                    winRate: 73,
+                    totalValue: 1650000
+                },
+                'ALL': {
+                    pnl: 3200000,
+                    pnlPercentage: 320.0,
+                    volume: 75000000,
+                    trades: 1654,
+                    winRate: 75,
+                    totalValue: 4200000
+                }
+            }
+        },
+        {
+            id: 4,
+            username: 'TradingNinja',
+            address: '0x789...ghi',
+            avatar: '⚔️',
+            stats: {
+                '24h': {
+                    pnl: 45000,
+                    pnlPercentage: 4.5,
+                    volume: 950000,
+                    trades: 25,
+                    winRate: 70,
+                    totalValue: 750000
+                },
+                '7d': {
+                    pnl: 220000,
+                    pnlPercentage: 22.0,
+                    volume: 4800000,
+                    trades: 85,
+                    winRate: 72,
+                    totalValue: 880000
+                },
+                '30d': {
+                    pnl: 680000,
+                    pnlPercentage: 68.0,
+                    volume: 14000000,
+                    trades: 342,
+                    winRate: 68,
+                    totalValue: 1450000
+                },
+                'ALL': {
+                    pnl: 2800000,
+                    pnlPercentage: 280.0,
+                    volume: 65000000,
+                    trades: 1543,
+                    winRate: 70,
+                    totalValue: 3800000
+                }
+            }
+        },
+        {
+            id: 5,
+            username: 'CryptoSage',
+            address: '0xabc...jkl',
+            avatar: '🧙',
+            stats: {
+                '24h': {
+                    pnl: 35000,
+                    pnlPercentage: 3.5,
+                    volume: 850000,
+                    trades: 22,
+                    winRate: 68,
+                    totalValue: 650000
+                },
+                '7d': {
+                    pnl: 180000,
+                    pnlPercentage: 18.0,
+                    volume: 4200000,
+                    trades: 76,
+                    winRate: 70,
+                    totalValue: 780000
+                },
+                '30d': {
+                    pnl: 580000,
+                    pnlPercentage: 58.0,
+                    volume: 12000000,
+                    trades: 298,
+                    winRate: 65,
+                    totalValue: 1250000
+                },
+                'ALL': {
+                    pnl: 2400000,
+                    pnlPercentage: 240.0,
+                    volume: 55000000,
+                    trades: 1432,
+                    winRate: 68,
+                    totalValue: 3400000
+                }
+            }
+        },
+        {
+            id: 6,
+            username: 'BullRunner',
+            address: '0xdef...mno',
+            avatar: '🐂',
+            stats: {
+                '24h': {
+                    pnl: 28000,
+                    pnlPercentage: 2.8,
+                    volume: 720000,
+                    trades: 18,
+                    winRate: 65,
+                    totalValue: 580000
+                },
+                '7d': {
+                    pnl: 150000,
+                    pnlPercentage: 15.0,
+                    volume: 3800000,
+                    trades: 65,
+                    winRate: 67,
+                    totalValue: 680000
+                },
+                '30d': {
+                    pnl: 480000,
+                    pnlPercentage: 48.0,
+                    volume: 10000000,
+                    trades: 265,
+                    winRate: 63,
+                    totalValue: 1150000
+                },
+                'ALL': {
+                    pnl: 2100000,
+                    pnlPercentage: 210.0,
+                    volume: 48000000,
+                    trades: 1321,
+                    winRate: 65,
+                    totalValue: 3100000
+                }
+            }
+        },
+        {
+            id: 7,
+            username: 'PhoenixTrader',
+            address: '0xghi...pqr',
+            avatar: '🔥',
+            stats: {
+                '24h': {
+                    pnl: 22000,
+                    pnlPercentage: 2.2,
+                    volume: 650000,
+                    trades: 15,
+                    winRate: 62,
+                    totalValue: 520000
+                },
+                '7d': {
+                    pnl: 120000,
+                    pnlPercentage: 12.0,
+                    volume: 3200000,
+                    trades: 58,
+                    winRate: 65,
+                    totalValue: 620000
+                },
+                '30d': {
+                    pnl: 420000,
+                    pnlPercentage: 42.0,
+                    volume: 9000000,
+                    trades: 234,
+                    winRate: 60,
+                    totalValue: 1050000
+                },
+                'ALL': {
+                    pnl: 1800000,
+                    pnlPercentage: 180.0,
+                    volume: 42000000,
+                    trades: 1234,
+                    winRate: 63,
+                    totalValue: 2800000
+                }
+            }
         }
-        // Add more traders...
     ];
 
     // Generate mock performance data when a trader is selected
