@@ -17,15 +17,16 @@ app.set('timeout', 30000);
 const corsOptions = {
     origin: ['https://365coin.netlify.app', 'http://localhost:3000', 'https://365coin.org'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    credentials: true,
-    optionsSuccessStatus: 200,
-    maxAge: 3600,
-    preflightContinue: false
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: false,
+    optionsSuccessStatus: 200
 };
 
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Handle OPTIONS preflight for all routes
+app.options('*', cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

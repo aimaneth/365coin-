@@ -6,15 +6,13 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: true,
-    timeout: 30000, // Increased timeout to 30 seconds
+    withCredentials: false,
+    timeout: 30000,
     timeoutErrorMessage: 'Request timed out. Please try again.',
-    // Add retry configuration
     retry: 3,
     retryDelay: 1000,
-    // Add request size limits
-    maxContentLength: 10 * 1024 * 1024, // 10MB
-    maxBodyLength: 10 * 1024 * 1024 // 10MB
+    maxContentLength: 10 * 1024 * 1024,
+    maxBodyLength: 10 * 1024 * 1024
 });
 
 // Request interceptor
@@ -30,9 +28,6 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
-        // Add CORS headers
-        config.headers['Access-Control-Allow-Origin'] = '*';
         return config;
     },
     (error) => {
