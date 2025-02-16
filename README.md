@@ -4,6 +4,8 @@
 
 A modern and secure cryptocurrency platform built with React, featuring presale functionality, wallet management, and real-time transaction tracking. The platform was developed as a custom solution to meet specific client requirements for their ICO launch.
 
+![Screenshot_18-1-2025_4594_365coin org](https://github.com/user-attachments/assets/5dbca80e-29bc-48b8-b611-53d8419d16eb)
+
 ## Project Overview
 
 This platform was commissioned to provide:
