@@ -163,11 +163,26 @@ const PnL = () => {
 
     const [tradingData, setTradingData] = useState(generateMockTrades());
 
-    const handleTraderSelect = (trader) => {
+    const handleTraderClick = (trader) => {
         setIsLoading(true);
-        setSelectedTrader(trader);
-        
-        // Simulate API call and generate data
+        setSelectedTrader({
+            id: trader.rank,
+            username: trader.username,
+            address: trader.walletAddress,
+            avatar: trader.username[0].toUpperCase(),
+            stats: {
+                [timeframe]: {
+                    pnl: trader.stats.totalPnL,
+                    pnlPercentage: trader.stats.winRate,
+                    volume: trader.stats.totalVolume,
+                    trades: trader.stats.totalTrades,
+                    winRate: trader.stats.winRate,
+                    totalValue: trader.stats.totalVolume
+                }
+            }
+        });
+
+        // Generate performance data
         setTimeout(() => {
             setPerformanceData(generatePerformanceData(trader));
             setTradingData(generateMockTrades());
@@ -294,8 +309,26 @@ const PnL = () => {
                         </div>
                         <div className="table-body">
                             {rankings.map((trader) => (
-                                <div key={trader.walletAddress} className="table-row">
-                                    <div className="rank-col">#{trader.rank}</div>
+                                <div 
+                                    key={trader.walletAddress} 
+                                    className={`table-row ${selectedTrader?.address === trader.walletAddress ? 'selected' : ''}`}
+                                    onClick={() => handleTraderClick(trader)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <div className="rank-col">
+                                        {trader.rank <= 3 ? (
+                                            <div className="rank-badge">
+                                                {trader.rank === 1 ? (
+                                                    <FaCrown style={{ color: '#FFD700' }} />
+                                                ) : trader.rank === 2 ? (
+                                                    <FaMedal style={{ color: '#C0C0C0' }} />
+                                                ) : (
+                                                    <FaMedal style={{ color: '#CD7F32' }} />
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        #{trader.rank}
+                                    </div>
                                     <div className="trader-col">
                                         <span className="trader-name">{trader.username}</span>
                                         <span className="trader-address">{formatAddress(trader.walletAddress)}</span>

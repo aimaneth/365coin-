@@ -105,12 +105,13 @@
 /* Main Content Layout */
 .pnl-content {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr minmax(0, 1fr);
     gap: 32px;
     height: calc(100vh - 300px);
     max-width: 1800px;
     margin: 0 auto;
     width: 100%;
+    position: relative;
 }
 
 /* Rankings Section */
@@ -227,10 +228,17 @@
     padding: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .table-row:hover {
     background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+.table-row.selected {
+    background: rgba(240, 192, 0, 0.05);
+    border-color: var(--primary);
 }
 
 .rank-col {
@@ -378,6 +386,21 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* Trader Details Section */
+.trader-details-section {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--border-radius-lg);
+    padding: var(--card-padding);
+    height: 100%;
+    overflow-y: auto;
+    display: none;
+}
+
+.trader-details-section.active {
+    display: block;
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
     .pnl-content {
@@ -390,6 +413,21 @@
         grid-template-columns: 1fr;
         height: auto;
         gap: 24px;
+    }
+
+    .trader-details-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        border-radius: 0;
+        display: none;
+    }
+
+    .trader-details-section.active {
+        display: block;
     }
 }
 
