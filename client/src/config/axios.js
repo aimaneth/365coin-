@@ -1,18 +1,20 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'https://three65coin-backend.onrender.com',
+    baseURL: process.env.REACT_APP_API_URL,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
     withCredentials: false,
-    timeout: 30000,
+    timeout: 30000, // Increased timeout to 30 seconds
     timeoutErrorMessage: 'Request timed out. Please try again.',
+    // Add retry configuration
     retry: 3,
     retryDelay: 1000,
-    maxContentLength: 10 * 1024 * 1024,
-    maxBodyLength: 10 * 1024 * 1024
+    // Add request size limits
+    maxContentLength: 10 * 1024 * 1024, // 10MB
+    maxBodyLength: 10 * 1024 * 1024 // 10MB
 });
 
 // Request interceptor

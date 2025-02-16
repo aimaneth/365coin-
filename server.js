@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './api/auth/routes.js';
-import rankingsRoutes from './api/routes/rankings.js';
 import dbCheck from './middleware/dbCheck.js';
 
 dotenv.config();
@@ -19,13 +18,11 @@ const corsOptions = {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: false,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    preflightContinue: false
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
-
-// Handle OPTIONS preflight for all routes
 app.options('*', cors(corsOptions));
 
 // Body parsing middleware
@@ -44,9 +41,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// CORS headers middleware
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (corsOptions.origin.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.header('Access-Control-Allow-Credentials', 'false');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/rankings', rankingsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
