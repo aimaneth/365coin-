@@ -11,88 +11,28 @@ const WeeklyWithdrawal = () => {
 
     // Mock data for company stats
     const companyStats = {
-        totalLiquidity: 25800000,
-        weeklyTurnover: 3450000,
-        weeklyProfit: 850000,
-        totalUsers: 15200,
-        activeUsers: 8500,
-        weeklyWithdrawals: 650000,
-        weeklyDeposits: 950000,
-        profitPercentage: 24.6,
-        userGrowth: 12.5
+        totalLiquidity: 85000000,      // 85M total liquidity
+        weeklyTurnover: 247000000,     // 247M weekly turnover (as specified)
+        weeklyProfit: 22000000,        // 22M weekly profit (as specified)
+        totalUsers: 15200,             // Total registered users
+        activeUsers: 12800,            // Active users (84% of total)
+        weeklyWithdrawals: 18500000,   // 18.5M in withdrawals
+        weeklyDeposits: 28700000,      // 28.7M in deposits
+        profitPercentage: 8.9,         // 8.9% profit rate (22M/247M)
+        userGrowth: 5.8                // 5.8% weekly user growth
     };
 
     // Mock data for weekly withdrawals
     const weeklyData = [
         {
-            week: 'Week 12',
-            date: 'Mar 18 - Mar 24, 2024',
-            withdrawals: 650000,
-            deposits: 950000,
-            profit: 850000,
-            turnover: 3450000,
-            userCount: 8500,
-            profitPercentage: 24.6
-        },
-        {
-            week: 'Week 11',
-            date: 'Mar 11 - Mar 17, 2024',
-            withdrawals: 580000,
-            deposits: 820000,
-            profit: 720000,
-            turnover: 3100000,
-            userCount: 8200,
-            profitPercentage: 23.2
-        },
-        {
-            week: 'Week 10',
-            date: 'Mar 4 - Mar 10, 2024',
-            withdrawals: 520000,
-            deposits: 780000,
-            profit: 680000,
-            turnover: 2950000,
-            userCount: 7800,
-            profitPercentage: 23.1
-        },
-        {
-            week: 'Week 9',
-            date: 'Feb 26 - Mar 3, 2024',
-            withdrawals: 480000,
-            deposits: 720000,
-            profit: 620000,
-            turnover: 2800000,
-            userCount: 7500,
-            profitPercentage: 22.1
-        },
-        {
-            week: 'Week 8',
-            date: 'Feb 18 - Feb 25, 2024',
-            withdrawals: 480000,
-            deposits: 720000,
-            profit: 620000,
-            turnover: 2800000,
-            userCount: 7500,
-            profitPercentage: 22.1
-        },
-        {
-            week: 'Week 7',
-            date: 'Feb 11 - Feb 17, 2024',
-            withdrawals: 480000,
-            deposits: 720000,
-            profit: 620000,
-            turnover: 2800000,
-            userCount: 7500,
-            profitPercentage: 22.1
-        },
-        {
-            week: 'Week 6',
+            week: 'Week 1',
             date: 'Feb 3 - Feb 10, 2024',
-            withdrawals: 480000,
-            deposits: 22480000,
-            profit: 22000000,
-            turnover: 2470000,
-            userCount: 7500,
-            profitPercentage: 90.1
+            withdrawals: 18500000,      // 18.5M withdrawals
+            deposits: 28700000,         // 28.7M deposits
+            profit: 22000000,           // 22M profit (as specified)
+            turnover: 247000000,        // 247M turnover (as specified)
+            userCount: 12800,           // Active users
+            profitPercentage: 8.9       // 8.9% profit rate
         }
     ];
 
