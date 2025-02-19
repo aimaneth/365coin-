@@ -63,6 +63,36 @@ const WeeklyWithdrawal = () => {
             turnover: 2800000,
             userCount: 7500,
             profitPercentage: 22.1
+        },
+        {
+            week: 'Week 8',
+            date: 'Feb 18 - Feb 25, 2024',
+            withdrawals: 480000,
+            deposits: 720000,
+            profit: 620000,
+            turnover: 2800000,
+            userCount: 7500,
+            profitPercentage: 22.1
+        },
+        {
+            week: 'Week 7',
+            date: 'Feb 11 - Feb 17, 2024',
+            withdrawals: 480000,
+            deposits: 720000,
+            profit: 620000,
+            turnover: 2800000,
+            userCount: 7500,
+            profitPercentage: 22.1
+        },
+        {
+            week: 'Week 6',
+            date: 'Feb 3 - Feb 10, 2024',
+            withdrawals: 480000,
+            deposits: 22480000,
+            profit: 22000000,
+            turnover: 2470000,
+            userCount: 7500,
+            profitPercentage: 90.1
         }
     ];
 
