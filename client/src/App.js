@@ -14,6 +14,7 @@ import Home from './components/Home';
 import Profile from './components/profile/Profile';
 import Settings from './components/settings/Settings';
 import PnL from './components/pnl/PnL';
+import WeeklyWithdrawal from './components/withdrawal/WeeklyWithdrawal';
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
@@ -79,6 +80,7 @@ const AppContent = () => {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/pnl" element={<PnL />} />
+                    <Route path="/weekly-withdrawal" element={<WeeklyWithdrawal />} />
                     <Route 
                         path="/profile" 
                         element={

@@ -69,6 +69,7 @@ const Navbar = () => {
                             <div className="nav-links">
                                 <Link to="/" className="nav-link">Home</Link>
                                 <Link to="/pnl" className="nav-link">PnL</Link>
+                                <Link to="/weekly-withdrawal" className="nav-link">Weekly Withdrawal</Link>
                             </div>
 
                             <div className="auth-section">
